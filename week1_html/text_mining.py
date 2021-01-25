@@ -10,6 +10,7 @@ def main():
     soup = BeautifulSoup(html, 'html.parser')
 
     # create a list of all the headers (caption in HS html)
-    list_headers = soup.findAll(True, {'caption'})
+    list_headers = soup.findAll('caption')
+    print(list_headers)
 
 main()
