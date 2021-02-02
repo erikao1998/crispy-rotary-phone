@@ -1,25 +1,22 @@
 from sklearn.feature_extraction.text import CountVectorizer
 
 documents = ["This is a silly example",
-             "A better example",
-             "Nothing to see here",
+             "A better example this",
+             "Nothing to this see here",
              "This is a great and long example"]
 
-
-cv = CountVectorizer(lowercase=True, binary=True)
+cv = CountVectorizer(lowercase=True, token_pattern = r"(?u)\b\w+\b", binary=True)
 sparse_matrix = cv.fit_transform(documents)
 dense_matrix = sparse_matrix.todense()
 td_matrix = dense_matrix.T
 
 sparse_td_matrix = sparse_matrix.T.tocsr()
 
-
 t2i = cv.vocabulary_  # shorter notation: t2i = term-to-index
 
-
-d = {"and": "&", "AND": "&",
-     "or": "|", "OR": "|",
-     "not": "1 -", "NOT": "1 -",
+d = {"AND": "&",
+     "OR": "|",
+     "NOT": "1 -",
      "(": "(", ")": ")"}          # operator replacements
 
 def rewrite_token(t):
@@ -39,7 +36,7 @@ while True:
     x = input("enter a word (empty line stops the program): ")
     if len(x) == 0:
         break
-    elif x not in set(("".join(z for z in documents)).split()):
+    elif x not in set((" ".join(z.lower() for z in documents)).split()):
         print("unknown word")
         y = False
     if y:
