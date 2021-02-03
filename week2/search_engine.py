@@ -1,13 +1,25 @@
 from sklearn.feature_extraction.text import CountVectorizer
 import re
 
+names = []
 try:
-    with open(r"enwiki-20181001-corpus.100-articles.txt", encoding="utf-8") as f:
-        doc = f.read()
-        doc_split = re.split("</?article.*>", doc)
+    f_lines = open(r"enwiki-20181001-corpus.100-articles.txt", encoding="utf-8") # the code opens the same file twice because I couldn't find any other way to handle the file both as a string and a txt file that contains lines
+    f_string = open(r"enwiki-20181001-corpus.100-articles.txt", encoding="utf-8")
 
-except:
-    print("file cannot be read")
+    for line in f_lines: # to use single lines of the file the text can't be a string
+        if "<article" in line:
+            line_split = line.split("\"")
+            name = line_split[1]
+            names.append(name)
+
+    doc = f_string.read() # the re.split function on the other hand needs a string
+    doc_split = re.split("</?article.*>", doc)
+
+    f_lines.close()
+    f_string.close()
+
+except FileNotFoundError:
+    print("File cannot be read")
 
 
 # documents = ["This is a silly example",
@@ -55,11 +67,11 @@ while True:
         test_query(x)
 
         hits_matrix = eval(rewrite_query(x))
-        # print("Matching documents as vector (it is actually a matrix with one single row):", hits_matrix)
-        # print("The coordinates of the non-zero elements:", hits_matrix.nonzero())
 
         hits_list = list(hits_matrix.nonzero()[1])
 
+        print("The word is in ", len(hits_list), "articles")
         for i, doc_idx in enumerate(hits_list[:10]):
-            print("Matching doc #{:d}: {:.500}...".format(i+1, doc_split[doc_idx]))
+            print("The name of the article {}: {}".format(i+1, names[(int(doc_idx) - 1) // 2]))
+            print("Preview: {:.500}...".format(doc_split[doc_idx]))
             print()
