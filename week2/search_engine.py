@@ -47,26 +47,19 @@ def rewrite_token(t):
 def rewrite_query(query): # rewrite every token in the query
     return " ".join(rewrite_token(t) for t in query.split())
 
-def test_query(query):
-    print("Query: '" + query + "'")
-    print("Rewritten:", rewrite_query(query))
-    print("Matching:", eval(rewrite_query(query))) # Eval runs the string as a Python command
-    print()
-
 while True:
-    y = True
+    x = True
     print("Enter a word (empty line stops the program). Put operators in capitals.")
-    x = input()
-    if len(x) == 0:
+    inp = input()
+    if len(inp) == 0:
         break
-    elif x not in set(re.split("\W|-", (" ".join(z.lower() for z in doc_split)))):
-        print("Unknown word")
-        print()
-        y = False
-    if y:
-        test_query(x)
-
-        hits_matrix = eval(rewrite_query(x))
+    for w in [y for y in inp.split() if y not in d]:
+        if w not in set(re.split("\W|-", (" ".join(z.lower() for z in doc_split)))):
+            print("\"{:s}\" is an unknown word.".format(w))
+            print()
+            x = False
+    if x:
+        hits_matrix = eval(rewrite_query(inp))
 
         hits_list = list(hits_matrix.nonzero()[1])
 
