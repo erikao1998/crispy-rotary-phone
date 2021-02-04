@@ -14,7 +14,7 @@ def open_file():
                 names.append(name)
 
         doc = f_string.read() # the re.split function on the other hand needs a string
-        doc_split = re.split("</?article.*>", doc)
+        doc_split = [art for art in re.split("</?article.*>", doc) if len(art)>2]
         return names, doc_split
 
         f_lines.close()
@@ -76,6 +76,6 @@ while True:
 
         print("The word is in ", len(hits_list), "articles")
         for i, doc_idx in enumerate(hits_list[:10]):
-            print("The name of the article {}: {}".format(i+1, names[(int(doc_idx) - 1) // 2]))
+            print("The name of the article {}: {}".format(i+1, names[(int(doc_idx))]))
             print("Preview: {:.500}...".format(doc_split[doc_idx]))
             print()
