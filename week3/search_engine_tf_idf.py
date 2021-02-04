@@ -77,7 +77,7 @@ d = {"AND": "&",
 while True:
     x = True
     print("Give number of words you want to search: ")
-    number = input()
+    number = int(input())
     print("Enter a word (empty line stops the program). Put operators in capitals.")
     inp = input()
     if len(inp) == 0:
