@@ -32,10 +32,11 @@ def open_file():
 #             "This is a great and long example"]
 names, doc_split = open_file()
 
-gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2")
-g_matrix = gv.fit_transform(doc_split).T.tocsr()
 
-def search_article(query_string):
+def search_article(query_string, number):
+
+    gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
+    g_matrix = gv.fit_transform(doc_split).T.tocsr()
 
     # Vectorize query string
     query_vec = gv.transform([ query_string ]).tocsc()
@@ -75,6 +76,8 @@ d = {"AND": "&",
 
 while True:
     x = True
+    print("Give number of words you want to search: ")
+    number = input()
     print("Enter a word (empty line stops the program). Put operators in capitals.")
     inp = input()
     if len(inp) == 0:
@@ -85,7 +88,7 @@ while True:
             print()
             x = False
     if x:
-        search_article(inp)
+        search_article(inp, number)
         # hits_matrix = eval(rewrite_query(inp))
         #
         # hits_list = list(hits_matrix.nonzero()[1])
