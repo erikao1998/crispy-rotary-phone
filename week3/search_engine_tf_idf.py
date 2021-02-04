@@ -51,27 +51,27 @@ def search_article(query_string):
     # Output result
     print("Your query '{:s}' matches the following documents:".format(query_string))
     for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
-        print("Doc #{:d} (score: {:.4f}): {:s}".format(i, score, names[doc_idx]))
+        print("Doc #{:d} (score: {:.4f}): {:s}".format(i+1, score, names[doc_idx]))
     print()
 
-sparse_matrix = cv.fit_transform(doc_split)
-dense_matrix = sparse_matrix.todense()
-td_matrix = dense_matrix.T
-
-sparse_td_matrix = sparse_matrix.T.tocsr()
-
-t2i = cv.vocabulary_  # shorter notation: t2i = term-to-index
-
+# sparse_matrix = cv.fit_transform(doc_split)
+# dense_matrix = sparse_matrix.todense()
+# td_matrix = dense_matrix.T
+#
+# sparse_td_matrix = sparse_matrix.T.tocsr()
+#
+# t2i = cv.vocabulary_  # shorter notation: t2i = term-to-index
+#
 d = {"AND": "&",
      "OR": "|",
      "NOT": "1 -",
      "(": "(", ")": ")"}          # operator replacements
-
-def rewrite_token(t):
-    return d.get(t, 'sparse_td_matrix[t2i["{:s}"]].todense()'.format(t))
-
-def rewrite_query(query): # rewrite every token in the query
-    return " ".join(rewrite_token(t) for t in query.split())
+#
+# def rewrite_token(t):
+#     return d.get(t, 'sparse_td_matrix[t2i["{:s}"]].todense()'.format(t))
+#
+# def rewrite_query(query): # rewrite every token in the query
+#     return " ".join(rewrite_token(t) for t in query.split())
 
 while True:
     x = True
