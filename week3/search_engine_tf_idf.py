@@ -1,32 +1,34 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
 
-names = []
-try:
-    f_lines = open(r"enwiki-20181001-corpus.100-articles.txt", encoding="utf-8") # the code opens the same file twice because I couldn't find any other way to handle the file both as a string and a txt file that contains lines
-    f_string = open(r"enwiki-20181001-corpus.100-articles.txt", encoding="utf-8")
+def open_file():
+    names = []
+    try:
+        f_lines = open(r"enwiki-20181001-corpus.100-articles.txt", encoding="utf-8") # the code opens the same file twice because I couldn't find any other way to handle the file both as a string and a txt file that contains lines
+        f_string = open(r"enwiki-20181001-corpus.100-articles.txt", encoding="utf-8")
 
-    for line in f_lines: # to use single lines of the file the text can't be a string
-        if "<article" in line:
-            line_split = line.split("\"")
-            name = line_split[1]
-            names.append(name)
+        for line in f_lines: # to use single lines of the file the text can't be a string
+            if "<article" in line:
+                line_split = line.split("\"")
+                name = line_split[1]
+                names.append(name)
 
-    doc = f_string.read() # the re.split function on the other hand needs a string
-    global doc_split
-    doc_split = re.split("</?article.*>", doc)
+        doc = f_string.read() # the re.split function on the other hand needs a string
+        doc_split = re.split("</?article.*>", doc)
+        return names, doc_split
 
-    f_lines.close()
-    f_string.close()
+        f_lines.close()
+        f_string.close()
 
-except FileNotFoundError:
-    print("File cannot be read")
+    except FileNotFoundError:
+        print("File cannot be read")
 
 
 # documents = ["This is a silly example",
 #             "A better example this",
 #             "Nothing to this see here",
 #             "This is a great and long example"]
+names, doc_split = open_file()
 
 gv = TfidfVectorizer(lowercase=True, sublinear_tf=False, use_idf=False, norm=None)
 tf_matrix1 = gv.fit_transform(doc_split).T.todense()
