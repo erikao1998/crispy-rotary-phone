@@ -16,7 +16,7 @@ def open_file():
                 names.append(name)
 
         doc = f_string.read() # the re.split function on the other hand needs a string
-        doc_split = [art for art in re.split("</?article.*>", doc) if len(art)>2]
+        doc_split = [art for art in re.split("</?article.*>", doc) if len(art)>2] # takes only actual, non-empty articles
         return names, doc_split
 
         f_lines.close()
@@ -25,13 +25,7 @@ def open_file():
     except FileNotFoundError:
         print("File cannot be read")
 
-
-# documents = ["This is a silly example",
-#             "A better example this",
-#             "Nothing to this see here",
-#             "This is a great and long example"]
 names, doc_split = open_file()
-
 
 def search_article(query_string, number):
 
@@ -39,7 +33,7 @@ def search_article(query_string, number):
     g_matrix = gv.fit_transform(doc_split).T.tocsr()
 
     # Vectorize query string
-    query_vec = gv.transform([ query_string ]).tocsc()
+    query_vec = gv.transform([query_string]).tocsc()
 
     # Cosine similarity
     hits = np.dot(query_vec, g_matrix)
@@ -55,46 +49,39 @@ def search_article(query_string, number):
         print("Doc #{:d} (score: {:.4f}): {:s}".format(i+1, score, names[doc_idx]))
     print()
 
-# sparse_matrix = cv.fit_transform(doc_split)
-# dense_matrix = sparse_matrix.todense()
-# td_matrix = dense_matrix.T
-#
-# sparse_td_matrix = sparse_matrix.T.tocsr()
-#
-# t2i = cv.vocabulary_  # shorter notation: t2i = term-to-index
-#
-d = {"AND": "&",
-     "OR": "|",
-     "NOT": "1 -",
-     "(": "(", ")": ")"}          # operator replacements
-#
-# def rewrite_token(t):
-#     return d.get(t, 'sparse_td_matrix[t2i["{:s}"]].todense()'.format(t))
-#
-# def rewrite_query(query): # rewrite every token in the query
-#     return " ".join(rewrite_token(t) for t in query.split())
-
 while True:
     x = True
-    print("Give number of words you want to search: ")
-    number = int(input())
-    print("Enter a word (empty line stops the program). Put operators in capitals.")
-    inp = input()
-    if len(inp) == 0:
+    print("\nGive the number of words you want to search. Keep in mind:\n -Empty line stops the program.\n",
+        "-If you want to search for the words separately, put \"1\"; for pairs of words, put \"2\", etc.")
+    number = input("Number: ")
+    if len(number) != 0: # if empty line then stops the program
+        try:
+            number = int(number)
+        except:
+            number = 0
+    else:
         break
-    for w in [y for y in inp.split() if y not in d]:
-        if w not in set(re.split("\W|-", (" ".join(z.lower() for z in doc_split)))):
-            print("\"{:s}\" is an unknown word.".format(w))
-            print()
-            x = False
-    if x:
-        search_article(inp, number)
-        # hits_matrix = eval(rewrite_query(inp))
-        #
-        # hits_list = list(hits_matrix.nonzero()[1])
-        #
-        # print("The word is in ", len(hits_list), "articles")
-        # for i, doc_idx in enumerate(hits_list[:10]):
-        #     print("The name of the article {}: {}".format(i+1, names[(int(doc_idx))]))
-        #     print("Preview: {:.500}...".format(doc_split[doc_idx]))
-        #     print()
+    if number <= 0: # if user inputs a zero, a negative or a non-integer number, asks for a valid number
+        print("Invalid input. Please enter a number larger than 0.")
+    else: # if the number is valid
+        inp = input("Enter search word(s): ")
+        for w in inp.split(): # separates input into words
+            # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
+            if w not in set(re.split("\W", (" ".join(y.lower() for y in doc_split)))) or w[-2:] == "'s":
+                if w[-2:] == "'s": # if user searches for word with possessive suffix, show appropriate message
+                    print("Write possessive suffixes as separate words without an apostrophe.")
+                else: # otherwise tells user which word(s) is/are unknown
+                    print("\"{:s}\" is an unknown word.".format(w))
+                inp = " ".join([word for word in inp.split() if word != w]) # deletes unknown words from input
+                number -= 1 # decreases the user's number according to the number of unknown words
+        if len(inp) != 0: # if the input does not consist only of unknown words
+            if number <= 0 and len(inp.split()) != 0: # if the resulting number is 0 or less but there is at least 1 known word
+                number = len(inp.split()) # correct the number
+            try:
+                if number <= len(inp.split()): # if the number entered is not larger than the number of words
+                    search_article(inp, number) # search normally
+                    print("NO WE HERE")
+                else:
+                    print("Wrong number of words.")
+            except:
+                continue
