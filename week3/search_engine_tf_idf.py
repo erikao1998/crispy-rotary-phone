@@ -80,7 +80,6 @@ while True:
             try:
                 if number <= len(inp.split()): # if the number entered is not larger than the number of words
                     search_article(inp, number) # search normally
-                    print("NO WE HERE")
                 else:
                     print("Wrong number of words.")
             except:
