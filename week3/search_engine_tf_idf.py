@@ -39,15 +39,17 @@ def search_article(query_string, number):
     hits = np.dot(query_vec, g_matrix)
 
     # Rank hits
-    ranked_scores_and_doc_ids = \
+    try:
+        ranked_scores_and_doc_ids = \
         sorted(zip(np.array(hits[hits.nonzero()])[0], hits.nonzero()[1]),
                reverse=True)
-
-    # Output result
-    print("Your query '{:s}' matches the following documents:".format(query_string))
-    for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
-        print("Doc #{:d} (score: {:.4f}): {:s}".format(i+1, score, names[doc_idx]))
-    print()
+        # Output result
+        print("Your query '{:s}' matches the following documents:".format(query_string))
+        for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
+            print("Doc #{:d} (score: {:.4f}): {:s}".format(i+1, score, names[doc_idx]))
+        print()
+    except IndexError:
+        print("No matching documents found.")
 
 while True:
     x = True
