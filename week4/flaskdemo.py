@@ -49,7 +49,7 @@ def search_article(query_string, number):
     for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
          match_names.append(names[doc_idx])
          match_starts.append(doc_split[doc_idx][:100])
-    return list(zip(match_names,match_starts)), merror
+    return list(zip(match_names,match_starts))
 
 #Function search() is associated with the address base URL + "/search"
 @app.route('/search')
@@ -83,7 +83,7 @@ def search():
                     number = len(words.split()) # correct the number
                 try:
                     if number <= len(words.split()): # if the number entered is not larger than the number of words
-                        articles, merror = search_article(words, number) # search normally
+                        articles = search_article(words, number) # search normally
                     else:
                         errors = ["Wrong number of words."]
                 except IndexError:

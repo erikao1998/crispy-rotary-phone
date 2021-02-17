@@ -6,6 +6,13 @@
           font-family: Garamond, serif;
           text-align: center
         }
+        table,th,td {
+          border: 1px solid black;
+          border-collapse: collapse;
+        }
+        .un {
+          text-decoration: underline
+        }
         </style>
         <title>Flask example</title>
     </head>
@@ -29,16 +36,23 @@
             <!--Otherwise show each error and then go through each article
                 and show the name and a preview of it-->
             {% for error in errors %}
-            <p>{{error}}</p>
+            <p style="font-size:130%">{{error}}</p>
             <!--End for loop for errors-->
             {% endfor %}
+            {% if articles|length != 0 %}
+            <tr>
+              <th class="un">Name of article</th>
+              <th class="un">Preview</th>
+            </tr>
             {% for (name, preview) in articles %}
             <tr>
                 <!--Display the name and a preview of the article-->
-                <td><em>{{ name }}</em>: {{ preview }}...</td>
+              <th><em>{{ name }}</em></th>
+              <td>{{preview}}...</td>
             </tr>
             <!--End for loop for article names and previews-->
             {% endfor %}
+            {% endif %}
             {% endif %}
         </table>
     </body>
