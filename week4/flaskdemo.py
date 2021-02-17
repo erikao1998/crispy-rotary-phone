@@ -7,14 +7,6 @@ import nltk
 #Initialize Flask instance
 app = Flask(__name__)
 
-example_data = [
-    {'name': 'Cat sleeping on a bed', 'source': 'cat.jpg'},
-    {'name': 'Misty forest', 'source': 'forest.jpg'},
-    {'name': 'Bonfire burning', 'source': 'fire.jpg'},
-    {'name': 'Old library', 'source': 'library.jpg'},
-    {'name': 'Sliced orange', 'source': 'orange.jpg'}
-]
-
 def open_file():
     names = []
 
@@ -38,7 +30,8 @@ def open_file():
 doc_split, names = open_file()
 
 def search_article(query_string, number):
-    match_names = []
+    match_names, match_starts = [], []
+    merror = False
     gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
     g_matrix = gv.fit_transform(doc_split).T.tocsr()
 
@@ -49,58 +42,56 @@ def search_article(query_string, number):
     hits = np.dot(query_vec, g_matrix)
 
     # Rank hits
-    try:
-        ranked_scores_and_doc_ids = \
-        sorted(zip(np.array(hits[hits.nonzero()])[0], hits.nonzero()[1]),
-               reverse=True)
-        # Output result
-        #print("Your query '{:s}' matches the following documents:".format(query_string))
-        for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
-             match_names.append(names[doc_idx])
-        #print()
-    except IndexError:
-
-        print("No matching documents found.")
-    return match_names
+    ranked_scores_and_doc_ids = \
+    sorted(zip(np.array(hits[hits.nonzero()])[0], hits.nonzero()[1]),
+           reverse=True)
+    # Output result
+    for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
+         match_names.append(names[doc_idx])
+         match_starts.append(doc_split[doc_idx][:100])
+    return list(zip(match_names,match_starts)), merror
 
 #Function search() is associated with the address base URL + "/search"
 @app.route('/search')
 def search():
-
-    names = []
-    #Get query from URL variable
+    articles, errors = [],[]
+    #Get queries from URL variable
     number = request.args.get('number')
 
     words = request.args.get('words')
 
-    #Initialize list of matches
+    if number and words: # if the user has entered something in both fields
+        try:
+            number = int(number) # converts the number into an integer
+        except:
+            number = 0
+        if number <= 0:
+            errors = ["Invalid input. Please enter an integer larger than 0."]
+        else:
+            for w in words.split(): # separates input into words
+                # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
+                if w not in set(re.split("\W", (" ".join(y.lower() for y in doc_split)))) or w[-2:] == "'s":
+                    errors.append("") # add dummy item to errors list for the html to know to still show articles
+                    if w[-2:] == "'s": # if user searches for word with possessive suffix, show appropriate message
+                        errors.append("Write possessive suffixes as separate words without an apostrophe.")
+                    else: # otherwise tells user which word(s) is/are unknown
+                        errors.append("\"{:s}\" is an unknown word.".format(w))
+                    words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
+                    number -= 1 # decreases the user's number according to the number of unknown words
+            if len(words) != 0: # if the input does not consist only of unknown words
+                if number <= 0 and len(words.split()) != 0: # if the resulting number is 0 or less but there is at least 1 known word
+                    number = len(words.split()) # correct the number
+                try:
+                    if number <= len(words.split()): # if the number entered is not larger than the number of words
+                        articles, merror = search_article(words, number) # search normally
+                    else:
+                        errors = ["Wrong number of words."]
+                except IndexError:
+                    errors = ["No matching documents found."]
 
-    #If query exists (i.e. is not None)
-    # if len(number) != 0: # if empty line then stops the program
-    #     try:
-    #         number = int(number)
-    #     except:
-    #         number = 0
-
-    if number and words: # if user inputs a zero, a negative or a non-integer number, asks for a valid number
-        # print("Invalid input. Please enter a number larger than 0.")
-            # if the number is valid
-        number = int(number)
-        for w in words.split(): # separates input into words
-            # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
-            if w not in set(re.split("\W", (" ".join(y.lower() for y in doc_split)))) or w[-2:] == "'s":
-                # if w[-2:] == "'s": # if user searches kfor word with possessive suffix, show appropriate message
-                #     # print("Write possessive suffixes as separate words without an apostrophe.")
-                # else: # otherwise tells user which word(s) is/are unknown
-                #     # print("\"{:s}\" is an unknown word.".format(w))
-                words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
-                number -= 1 # decreases the user's number according to the number of unknown words
-                # if the input does not consist only of unknown words
-             # if the number entered is not larger than the number of words
-        names = search_article(words, number) # search normally
-                # else:
-                #     print("Wrong number of words.")
+    else:
+        errors = ["Enter both a number and at least one word."]
 
 
     #Render index.html with matches variable
-    return render_template('index.html', names=names)
+    return render_template('index.html', articles=articles, errors=errors)

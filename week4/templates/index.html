@@ -21,17 +21,25 @@
           <input type="submit" value="Submit">
         </form>
         <table>
-            <!--Go through each item in the "matches" variable sent from
-                search() function in the Flask app-->
-            {% for item in names %}
-            <tr>
-                <!--Display the name of the item based on the "name" key-->
-                <td>{{ item }}</td>
-                <!--Display the image of the item based on the "source" key-->
-                <!--<td><img src="/static/{{ item["source"] }}" style="width: 400px; height 100%"></td>-->
-            </tr>
-            <!--End for loop-->
+            <!--If there is one error in the list-->
+            {% if errors|length == 1 %}
+            <!--Show only that error-->
+            <p>{{errors[0]}}</p>
+            {% else %}
+            <!--Otherwise show each error and then go through each article
+                and show the name and a preview of it-->
+            {% for error in errors %}
+            <p>{{error}}</p>
+            <!--End for loop for errors-->
             {% endfor %}
+            {% for (name, preview) in articles %}
+            <tr>
+                <!--Display the name and a preview of the article-->
+                <td><em>{{ name }}</em>: {{ preview }}...</td>
+            </tr>
+            <!--End for loop for article names and previews-->
+            {% endfor %}
+            {% endif %}
         </table>
     </body>
 </html>
