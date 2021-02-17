@@ -38,7 +38,7 @@ def open_file():
 doc_split, names = open_file()
 
 def search_article(query_string, number):
-
+    match_names = []
     gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
     g_matrix = gv.fit_transform(doc_split).T.tocsr()
 
@@ -55,18 +55,19 @@ def search_article(query_string, number):
                reverse=True)
         # Output result
         #print("Your query '{:s}' matches the following documents:".format(query_string))
-        #for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
-             #print("Doc #{:d} (score: {:.4f}): {:s}".format(i+1, score, names[doc_idx]))
+        for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
+             match_names.append(names[doc_idx])
         #print()
     except IndexError:
 
         print("No matching documents found.")
-    return ranked_scores_and_doc_ids
+    return match_names
 
 #Function search() is associated with the address base URL + "/search"
 @app.route('/search')
 def search():
-    matches = []
+
+    names = []
     #Get query from URL variable
     number = request.args.get('number')
 
@@ -96,10 +97,10 @@ def search():
                 number -= 1 # decreases the user's number according to the number of unknown words
                 # if the input does not consist only of unknown words
              # if the number entered is not larger than the number of words
-        matches = search_article(words, number) # search normally
+        names = search_article(words, number) # search normally
                 # else:
                 #     print("Wrong number of words.")
 
 
     #Render index.html with matches variable
-    return render_template('index.html', matches=matches)
+    return render_template('index.html', names=names)

@@ -9,8 +9,8 @@
         </style>
         <title>Flask example</title>
     </head>
-    <body>
-        <img src="divider" alt="divider" width="500" height="100">
+    <body style="background-color:AliceBlue;">
+        <img src="/static/divider.png" alt="divider" width="500" height="130">
         <h1>Find articles with keywords</h1>
         <!--Reload the page with variable "query" in the URL-->
         <form>
@@ -23,7 +23,7 @@
         <table>
             <!--Go through each item in the "matches" variable sent from
                 search() function in the Flask app-->
-            {% for item in matches %}
+            {% for item in names %}
             <tr>
                 <!--Display the name of the item based on the "name" key-->
                 <td>{{ item }}</td>
