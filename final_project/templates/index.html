@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+        body {
+          font-family: Garamond, serif;
+          text-align: center
+        }
+        table,th,td {
+          border: 1px solid black;
+          border-collapse: collapse;
+        }
+        .un {
+          text-decoration: underline
+        }
+        </style>
+        <title>Flask example</title>
+    </head>
+    <body style="background-color:AliceBlue;">
+        <img src="/static/divider.png" alt="divider" width="500" height="130">
+        <h1>Find articles with keywords</h1>
+        <!--Reload the page with variable "query" in the URL-->
+        <form>
+          <label for="number">Number of words:</label>
+          <input type="text" id="number" name="number"><br><br>
+          <label for="words">Words:</label>
+          <input type="text" id="words" name="words"><br><br>
+          <input type="submit" value="Submit">
+        </form>
+        <table>
+            <!--If there is one error in the list-->
+            {% if errors|length == 1 %}
+            <!--Show only that error-->
+            <p>{{errors[0]}}</p>
+            {% else %}
+            <!--Otherwise show each error and then go through each article
+                and show the name and a preview of it-->
+            {% for error in errors %}
+            <p style="font-size:130%">{{error}}</p>
+            <!--End for loop for errors-->
+            {% endfor %}
+            {% if articles|length != 0 %}
+            <tr>
+              <th class="un">Name of article</th>
+              <th class="un">Preview</th>
+            </tr>
+            {% for (name, preview) in articles %}
+            <tr>
+                <!--Display the name and a preview of the article-->
+              <th><em>{{ name }}</em></th>
+              <td>{{preview}}...</td>
+            </tr>
+            <!--End for loop for article names and previews-->
+            {% endfor %}
+            {% endif %}
+            {% endif %}
+        </table>
+    </body>
+</html>
