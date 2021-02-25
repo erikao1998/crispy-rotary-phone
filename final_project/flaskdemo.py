@@ -71,10 +71,12 @@ def search():
         else:
             for w in words.split(): # separates input into words
                 # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
-                if w not in set(re.split("\W", (" ".join(y.lower() for y in doc_split)))) or w[-2:] == "'s":
+                if w not in set(re.split("\W", (" ".join(y.lower() for y in doc_split)))) or w[-2:] == "'s" or "-" in w:
                     errors.append("") # add dummy item to errors list for the html to know to still show articles
                     if w[-2:] == "'s": # if user searches for word with possessive suffix, show appropriate message
                         errors.append("Write possessive suffixes as separate words without an apostrophe.")
+                    elif "-" in w:
+                        errors.append("Write hyphenated words separately.")
                     else: # otherwise tells user which word(s) is/are unknown
                         errors.append("\"{:s}\" is an unknown word.".format(w))
                     words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
