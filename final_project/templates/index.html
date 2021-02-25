@@ -41,14 +41,18 @@
             {% endfor %}
             {% if articles|length != 0 %}
             <tr>
+              <th class="un">Ranking</th>
+              <th class="un">Rel. score</th>
               <th class="un">Name of article</th>
               <th class="un">Preview</th>
             </tr>
-            {% for (name, preview) in articles %}
+            {% for number, (score, (name, preview)) in articles %}
             <tr>
-                <!--Display the name and a preview of the article-->
+              <!--Display the number, name and a preview of the article-->
+              <th>{{ number+1 }}.</th>
+              <td><em>{{ score }}</em></th>
               <th><em>{{ name }}</em></th>
-              <td>{{preview}}...</td>
+              <td>{{ preview }}...</td>
             </tr>
             <!--End for loop for article names and previews-->
             {% endfor %}

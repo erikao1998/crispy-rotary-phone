@@ -30,7 +30,7 @@ def open_file():
 doc_split, names = open_file()
 
 def search_article(query_string, number):
-    match_names, match_starts = [], []
+    scores, match_names, match_starts = [], [], []
     merror = False
     gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
     g_matrix = gv.fit_transform(doc_split).T.tocsr()
@@ -47,9 +47,10 @@ def search_article(query_string, number):
            reverse=True)
     # Output result
     for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
-         match_names.append(names[doc_idx])
-         match_starts.append(doc_split[doc_idx][:100])
-    return list(zip(match_names,match_starts))
+        scores.append(float("{:4f}".format(score)))
+        match_names.append(names[doc_idx])
+        match_starts.append(doc_split[doc_idx][:100])
+    return list(enumerate((zip(scores,zip(match_names,match_starts)))))
 
 #Function search() is associated with the address base URL + "/search"
 @app.route('/search')
