@@ -50,12 +50,12 @@ def search_article(query_string, number):
         scores.append(float("{:4f}".format(score)))
         match_names.append(names[doc_idx])
         match_starts.append(doc_split[doc_idx][:100])
-    return list(enumerate((zip(scores,zip(match_names,match_starts)))))
+    return list(enumerate((zip(scores,zip(match_names,match_starts))))),len(ranked_scores_and_doc_ids)
 
 #Function search() is associated with the address base URL + "/search"
 @app.route('/search')
 def search():
-    articles, errors = [],[]
+    articles, errors, matches = [],[],0
     #Get queries from URL variable
     number = request.args.get('number')
 
@@ -84,15 +84,15 @@ def search():
                     number = len(words.split()) # correct the number
                 try:
                     if number <= len(words.split()): # if the number entered is not larger than the number of words
-                        articles = search_article(words, number) # search normally
+                        articles, matches = search_article(words, number) # search normally
                     else:
                         errors = ["Wrong number of words."]
                 except IndexError:
-                    errors = ["No matching documents found."]
+                    errors = ["No matching articles found."]
 
     else:
         errors = ["Enter both a number and at least one word."]
 
 
     #Render index.html with matches variable
-    return render_template('index.html', articles=articles, errors=errors)
+    return render_template('index.html', articles=articles, errors=errors, matches=matches)
