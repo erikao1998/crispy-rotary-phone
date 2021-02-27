@@ -2,10 +2,21 @@
     <head>
         <meta charset="utf-8">
         <style>
+
         body {
           font-family: Garamond, serif;
-          text-align: center
+          text-align: center;
+          background-color:AliceBlue;
         }
+
+        li {
+          list-style: none;
+        }
+
+        ul {
+          padding: 0
+        }
+
         table,th,td {
           border: 1px solid black;
           border-collapse: collapse;
@@ -13,19 +24,33 @@
         .un {
           text-decoration: underline
         }
+
+        .genres {
+          display: flex;
+          justify-content: center;
+        }
         </style>
         <title>Flask example</title>
     </head>
-    <body style="background-color:AliceBlue;">
+    <body>
         <img src="/static/divider.png" alt="divider" width="500" height="130">
         <h1>Find articles with keywords</h1>
         <!--Reload the page with variable "query" in the URL-->
-        <form>
+        <form action="/search" method="POST">
           <label for="number">Number of words:</label>
           <input type="text" id="number" name="number"><br><br>
           <label for="words">Words:</label>
           <input type="text" id="words" name="words"><br><br>
-          <input type="submit" value="Submit">
+
+          <div class="genres">
+            <input type="checkbox" id="Fantasy" name="genre" value="Fantasy">
+            <label for="fantasy">Fantasy</label><br>
+            <input type="checkbox" id="Animation" name="genre" value="Animation">
+            <label for="Animation">Animation</label><br>
+            <input type="checkbox" id="Horror" name="genre" value="Horror">
+            <label for="Horror">Horror</label>
+          </div><br>
+          <input type="submit" value="Submit"><br>
         </form>
         <table>
             <!--If there is one error in the list-->
@@ -40,16 +65,15 @@
             <!--End for loop for errors-->
             {% endfor %}
             {% if articles|length != 0 %}
-            <tr>
-              <th class="un">Name of article</th>
-              <th class="un">Preview</th>
-            </tr>
-            {% for (name, preview) in articles %}
-            <tr>
+            {% for name in articles.items() %}
+            <ul>
                 <!--Display the name and a preview of the article-->
-              <th><em>{{ name }}</em></th>
-              <td>{{preview}}...</td>
-            </tr>
+                <h2>{{ name[0] }}</h2>
+                {% for item in name[1] %}
+                  <li><em>{{ item }}</em></li>
+                {% endfor %}
+
+            </ul>
             <!--End for loop for article names and previews-->
             {% endfor %}
             {% endif %}
