@@ -105,32 +105,57 @@ def search_article(query_string, number, doc, names):
 def search():
     errors =[]
     all_articles = {}
+    number = int(number)
     #Get queries from URL variable
     if request.method == "POST":
         genres = request.form.getlist('genre')
         number = request.form.get('number')
         words = request.form.get('words')
 
+    # if number and words: # if the user has entered something in both fields
+    #     try:
+    #         number = int(number) # converts the number into an integer
+    #     except:
+    #         number = 0
+    #     if number <= 0:
+    #         errors = ["Invalid input. Please enter an integer larger than 0."]
+    #     else:
+    #         for w in words.split(): # separates input into words
+    #             # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
+    #             if w not in set(re.split("\W", (" ".join(y.lower() for y in doc_split)))) or w[-2:] == "'s":
+    #                 errors.append("") # add dummy item to errors list for the html to know to still show articles
+    #                 if w[-2:] == "'s": # if user searches for word with possessive suffix, show appropriate message
+    #                     errors.append("Write possessive suffixes as separate words without an apostrophe.")
+    #                 else: # otherwise tells user which word(s) is/are unknown
+    #                     errors.append("\"{:s}\" is an unknown word.".format(w))
+    #                 words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
+    #                 number -= 1 # decreases the user's number according to the number of unknown words
+    #         if len(words) != 0: # if the input does not consist only of unknown words
+    #             if number <= 0 and len(words.split()) != 0: # if the resulting number is 0 or less but there is at least 1 known word
+    #                 number = len(words.split()) # correct the number
+    #             try:
+    #                 if number <= len(words.split()): # if the number entered is not larger than the number of words
+    #                     articles = search_article(words, number) # search normally
+    #                 else:
+    #                     errors = ["Wrong number of words."]
+
 
      #if the user has entered something in both fields
-     # try:
-        number = int(number) # converts the number into an integer
-        # except Exception as e:
-        #     print(e)
-            #     number = 0
-            # if number <= 0:
-            #     errors = ["Invalid input. Please enter an integer larger than 0."]
-            # else:
-                # for w in words.split(): # separates input into words
-                #     # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
-                #     if w not in set(re.split("\W", (" ".join(y.lower() for y in subtitles)))) or w[-2:] == "'s":
-                #         errors.append("") # add dummy item to errors list for the html to know to still show articles
+     #try:
+    number = int(number) # converts the number into an integer
+    if number <= 0:
+        errors = ["Invalid input. Please enter an integer larger than 0."]
+    else:
+        for w in words.split(): # separates input into words
+        # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
+            if w not in set(re.split("\W", (" ".join(y.lower() for y in subtitles)))) or w[-2:] == "'s":
+                errors.append("") # add dummy item to errors list for the html to know to still show articles
                 #         if w[-2:] == "'s": # if user searches for word with possessive suffix, show appropriate message
                 #             errors.append("Write possessive suffixes as separate words without an apostrophe.")
-                #         else: # otherwise tells user which word(s) is/are unknown
-                #             errors.append("\"{:s}\" is an unknown word.".format(w))
-                #         words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
-                #         number -= 1 # decreases the user's number according to the number of unknown words
+            else: # otherwise tells user which word(s) is/are unknown
+                errors.append("\"{:s}\" is an unknown word.".format(w))
+        words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
+        number -= 1 # decreases the user's number according to the number of unknown words
         print(request.form)
         if len(words) > 0: # if the input does not consist only of unknown words
             if number <= 0 and len(words.split()) > 0: # if the resulting number is 0 or less but there is at least 1 known word
