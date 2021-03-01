@@ -15,6 +15,10 @@
 
         }
 
+        .years {
+          display: inline-block;
+        }
+
         li {
           list-style: none;
         }
@@ -57,26 +61,33 @@
             <label for="Horror">Horror</label>
           </div><br>
           <div class="Fantasy selectt">
-            <h2>Fantasy</h2>
+            <h3>Fantasy</h3>
             {% for year in fantasy_years %}
+            <div class="years">
             <input type="checkbox" name="fantasy_year" value={{ year }} checked>
             <label for={{ year }}>{{ year }}</label><br>
+            </div>
             {% endfor %}
           </div>
           <div class="Animation selectt">
-            <h2>Animation</h2>
+            <h3>Animation</h3>
             {% for year in animation_years %}
+            <div class="years">
             <input type="checkbox" name="animation_year" value={{ year }} checked>
             <label for={{ year }}>{{ year }}</label><br>
+            </div>
             {% endfor %}
           </div>
 
           <div class="Horror selectt">
-            <h2>Horror</h2>
+            <h3>Horror</h3>
             {% for year in horror_years %}
+            <div class="years">
             <input type="checkbox" name="horror_year" value={{ year }} checked>
             <label for={{ year }}>{{ year }}</label><br>
+            </div>
             {% endfor %}
+
           </div>
           <script type="text/javascript">
             $(document).ready(function() {
