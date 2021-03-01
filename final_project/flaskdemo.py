@@ -10,6 +10,7 @@ import re
 import numpy as np
 import nltk
 from nltk.stem.snowball import SnowballStemmer
+from nltk.tokenize import tokenize
 
 #Initialize Flask instance
 app = Flask(__name__)
@@ -72,18 +73,11 @@ def manipulate(list):
 def search_article(query_string, number, doc, names):
     match_names = []
     merror = False
-    gv = TfidfVectorizer(tokenizer=tokenize, lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
+    gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
     g_matrix = gv.fit_transform(doc).T.tocsr()
 
-    # # Stem the text
-    # snow_stemmer = SnowballStemmer(language='english')
-    # for w in query_string:
-    #     x = snow_stemmer.stem(w)
-    #     stem_words.append(x)
-    # stemmed_text = " ".join(stem_words)
-    #
-    # # Vectorize query string
-    # query_vec = gv.transform([query_string]).tocsc()
+    # Vectorize query string
+    query_vec = gv.transform([query_string]).tocsc()
 
     hits = np.dot(query_vec, g_matrix)
 
@@ -98,6 +92,29 @@ def search_article(query_string, number, doc, names):
     match_names = manipulate(match_names)
 
     return match_names
+
+def stem_search(query_string, number): # stem search as a separate function (if we can make it work it might be possible to implement it to the previous search function)
+    match_names, match_starts = [], []
+    merror = False
+    gv = TfidfVectorizer(tokenizer=tokenize, lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
+    g_matrix = gv.fit_transform(doc_split).T.tocsr()
+
+    snow_stemmer = SnowballStemmer(language='english')
+    for w in gv:
+        x = snow_stemmer.stem(w)
+        stem_words.append(x)
+    stemmed_text = " ".join(stem_words)
+
+    # Vectorize query string
+    query_vec = gv.transform([stemmed_text]).tocsc()
+
+    # Cosine similarity
+    hits = np.dot(stemmed_text, g_matrix)
+
+    for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
+         match_names.append(names[doc_idx])
+         match_starts.append(doc_split[doc_idx][:100])
+    return list(zip(match_names,match_starts))
 
 
 #Function search() is associated with the address base URL + "/search"
