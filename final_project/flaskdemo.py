@@ -21,48 +21,36 @@ def parser(polku):
     for elem in root: # the loop goes through the XML tree
         for subelem in elem:
             if subelem.text != None:
-                subtitle = subtitle + " " + subelem.text # adds all the words of the file into the string if the value of the word is not None
+                subtitle = subtitle + " " + subelem.text # adds all the words of the file into the string
     return subtitle
 
-def open_file(genre):
+
+def open_file(genre, selected_years):
     subtitles = []
     names = []
 
     root_path = r"static\en\OpenSubtitles\xml\en"
     directory = os.path.join(root_path, genre)
 
-    years = []
-
-    for filename in os.listdir(directory):
-
-        years.append(filename)
-
-
-    for year in years:
+    for year in selected_years:
         folder = os.path.join(directory, year)
         for filename in os.listdir(folder):
 
             if filename.endswith(".xml"):
                 names.append(filename)
                 path = os.path.join(folder, filename)
-
                 subtitles.append(parser(path))
-
-
-
     return subtitles, names
 
+# removes every extra character from the titles of the matching movies
 def manipulate(list):
     new_list = []
     for item in list:
-
-        new_item = re.sub(r"\d*_\d*_\d*_(.*)\.xml", r"\1", item)
-        new_item = " ".join(x for x in new_item.split("_"))
-        if new_item not in new_list:
+        new_item = re.sub(r"\d*_\d*_\d*_(.*)\.xml", r"\1", item) # removes numbers and the file type
+        new_item = " ".join(x for x in new_item.split("_")) # removes underscores that separated the parts of the title
+        if new_item not in new_list: # prevents duplicates (that otherwise are quite common)
             new_list.append(new_item)
     return new_list
-
-
 
 def search_article(query_string, number, doc, names):
     match_names = []
@@ -88,21 +76,38 @@ def search_article(query_string, number, doc, names):
     return match_names
 
 
-#Function search() is associated with the address base URL + "/search"
-@app.route('/search', methods=['GET', 'POST'])
+# Function search() is associated with the address base URL + "/search"
+# Had some problems with multiword search so currently works only with one word
+@app.route('/search', methods=['GET', 'POST']) # added POST and GET methods
 def search():
+    fantasy = [1966, 1983, 1984, 1985, 1995, 1998, 1999, 2000, 2001, 2005]
+    animation = [1937, 1940, 1942, 1959, 1963, 1972, 1982, 1984, 1987, 1988, 1989, 1991, 1992, 1994, 1995, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005]
+    horror = [1922, 1955, 1957, 1068, 1974, 1976, 1980, 1981, 1986, 1987, 1988, 1990, 1993, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005]
     errors =[]
-    all_articles = {}
-    #Get queries from URL variable
+    all_years = []
+    all_articles = {} # created a dictionary instead of an array
+    # the browser does a post request to the server when the user presses submit button.
     if request.method == "POST":
         genres = request.form.getlist('genre')
         number = request.form.get('number')
         words = request.form.get('words')
+        fantasy_year = request.form.getlist('fantasy_year')
+        animation_year = request.form.getlist('animation_year')
+        horror_year = request.form.getlist('horror_year')
 
+        if len(fantasy_year) > 0 and "Fantasy" in genres:
+            all_years.append(fantasy_year)
+        if len(animation_year) > 0 and "Animation" in genres:
+            all_years.append(animation_year)
+        if len(horror_year) > 0 and "Horror" in genres:
+            all_years.append(horror_year)
 
+        number = int(number)
+     # THE COMMENTED CODE BELOW CONTAINS WHAT IS LEFT FROM THE CODE THAT ALLOWS THE MULTI WORD SEARCH. I COULDN'T MAKE IT TO WORK WITH THE CURRENT CORPUS
+     # -------------
      #if the user has entered something in both fields
      # try:
-        number = int(number) # converts the number into an integer
+         # converts the number into an integer
         # except Exception as e:
         #     print(e)
             #     number = 0
@@ -119,21 +124,23 @@ def search():
                 #             errors.append("\"{:s}\" is an unknown word.".format(w))
                 #         words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
                 #         number -= 1 # decreases the user's number according to the number of unknown words
-        print(request.form)
-        if len(words) > 0: # if the input does not consist only of unknown words
-            if number <= 0 and len(words.split()) > 0: # if the resulting number is 0 or less but there is at least 1 known word
-                number = len(words.split()) # correct the number
+        # ---------
+
+        if len(words) > 0:
+            if number <= 0 and len(words.split()) > 0:
+                number = len(words.split())
             try:
                 if len(genres) == 0:
                     errors = ["Select at least one genre"]
-                else:   # if number <= len(words.split()): # if the number entered is not larger than the number of words
+                if len(all_years) < len(genres):
+                    errors = ["Select at least one year for the selected genres"]
+                else:
 
-                    for genre in genres:
-                        doc, names = open_file(genre)
-                        articles = search_article(words, number, doc, names) # search normally
-                        all_articles[genre] = articles
-                        # else:
-                        #     errors = ["Wrong number of words."]
+                    for x in range(len(genres)):
+                        doc, names = open_file(genres[x], all_years[x])
+                        articles = search_article(words, number, doc, names)
+                        all_articles[genres[x]] = articles
+
             except IndexError:
                 errors = ["No matching documents found."]
 
@@ -142,5 +149,4 @@ def search():
 
 
     #Render index.html with matches variable
-    print(all_articles)
-    return render_template('index.html', articles=all_articles, errors=errors)
+    return render_template('index.html', articles=all_articles, errors=errors, fantasy_years=fantasy, animation_years=animation, horror_years=horror)

@@ -1,12 +1,18 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <script src=
+"https://code.jquery.com/jquery-1.12.4.min.js"></script>
         <style>
 
         body {
           font-family: Garamond, serif;
           text-align: center;
           background-color:AliceBlue;
+        }
+        .selectt {
+          display: none
+
         }
 
         li {
@@ -50,7 +56,37 @@
             <input type="checkbox" id="Horror" name="genre" value="Horror">
             <label for="Horror">Horror</label>
           </div><br>
-          <input type="submit" value="Submit"><br>
+          <div class="Fantasy selectt">
+            <h2>Fantasy</h2>
+            {% for year in fantasy_years %}
+            <input type="checkbox" name="fantasy_year" value={{ year }} checked>
+            <label for={{ year }}>{{ year }}</label><br>
+            {% endfor %}
+          </div>
+          <div class="Animation selectt">
+            <h2>Animation</h2>
+            {% for year in animation_years %}
+            <input type="checkbox" name="animation_year" value={{ year }} checked>
+            <label for={{ year }}>{{ year }}</label><br>
+            {% endfor %}
+          </div>
+
+          <div class="Horror selectt">
+            <h2>Horror</h2>
+            {% for year in horror_years %}
+            <input type="checkbox" name="horror_year" value={{ year }} checked>
+            <label for={{ year }}>{{ year }}</label><br>
+            {% endfor %}
+          </div>
+          <script type="text/javascript">
+            $(document).ready(function() {
+                $('input[type="checkbox"]').click(function() {
+                    var inputValue = $(this).attr("value");
+                    $("." + inputValue).toggle();
+                });
+            });
+          </script>
+          <br><input type="submit" value="Submit"><br>
         </form>
         <table>
             <!--If there is one error in the list-->
