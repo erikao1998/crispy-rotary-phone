@@ -47,24 +47,21 @@
   <img src="/static/divider.png" alt="divider" width="500" height="130">
   <section>
     <div class="left">
-      <form>
-        <input type="radio" name="searchtype" value="bmp" onclick="showNumber()" checked="checked">
-        <label for="bmp">Boolean/multi-word phrases</label><br>
-        <input type="radio" name="searchtype" value="stemming" onclick="showNumber()">
-        <label for="stemming">Stemming</label><br>
-      </form>
+      <input form="form" type="radio" id="bmp" name="searchtype" value="bmp" onclick="changeInputs()">
+      <label for="bmp">Boolean/multi-word phrases</label><br>
+      <input form="form" type="radio" id="stem" name="searchtype" value="stem" onclick="changeInputs()">
+      <label for="stem">Stemming</label><br>
     </div>
     <div class="middle">
       <h1>Find articles with keywords</h1>
       <!--Reload the page with variable "query" in the URL-->
-      <form>
-        <div id="numberfield">
-          <label for="number">Number of words:</label>
-          <input type="text" id="number" name="number"><br><br>
-        </div>
+      <p id="noChoiceYet"><i>Choose a search type.</i></p>
+      <form id="form" style="display:none">
+        <label for="number">Number of words:</label>
+        <input type="number" id="number" name="number" min="1" step="1"><br><br>
         <label for="words" id="wordlabel">Word(s):</label>
         <input type="text" id="words" name="words"><br><br>
-        <input type="submit" id="search" value="Boolean/multi-word search">
+        <input type="submit" id="search" value="Search (Boolean/multi-word)">
       </form>
     </div>
     <div class="right" style="font-size:130%">
@@ -86,35 +83,44 @@
 
   <table>
     {% if articles|length != 0 %}
+    <p><b>{{articles|length}}</b> matching articles found:</p>
     <tr>
       <th class="un">Ranking</th>
       <th class="un">Rel. score</th>
       <th class="un">Name of article</th>
       <th class="un">Preview</th>
     </tr>
-    {% for number, (score, (name, preview)) in articles %}
+    {% for rank, (score, (name, preview)) in articles %}
     <tr>
       <!--Display the number, name and a preview of the article-->
-      <th>{{ number+1 }}.</th>
+      <th>{{ rank+1 }}.</th>
       <td><em>{{ score }}</em></th>
       <th><em>{{ name }}</em></th>
       <td>{{ preview }}...</td>
     </tr>
     <!--End for loop for article names and previews-->
     {% endfor %}
+    {% else %}
+    <p><b>No</b> matching articles found.</p>
     {% endif %}
     </table>
     <script>
-      function showNumber(){
-        if(document.forms[0].elements["searchtype"].value=="bmp"){
-          document.getElementById("numberfield").style.display="";
-          document.getElementById("search").value="Boolean/multi-word search"
-          document.getElementById("wordlabel").innerHTML="Word(s):"
-        }
-        else{
-          document.getElementById("numberfield").style.display="none";
-          document.getElementById("search").value="Stem search"
+      function changeInputs(){
+        document.getElementById("noChoiceYet").style.display="none";
+        document.getElementsByTagName("form")[0].style.display="block";
+        var search_type="bmp";
+        document.getElementsByName("searchtype").forEach((stype) => {
+          if (stype.checked) {search_type=stype.value}
+        });
+        if(search_type=="stem"){
+          document.getElementById("number").setAttribute("disabled","");
+          document.getElementById("search").value="Search (stemming)";
           document.getElementById("wordlabel").innerHTML="Word:"
+        }
+        else if(search_type=="bmp"){
+          document.getElementById("number").removeAttribute("disabled");
+          document.getElementById("search").value="Search (Boolean/multi-word)";
+          document.getElementById("wordlabel").innerHTML="Word(s):"
         }
       }
     </script>
