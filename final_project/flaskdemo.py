@@ -31,7 +31,6 @@ doc_split, names = open_file()
 
 def search_article(query_string, number):
     scores, match_names, match_starts = [], [], []
-    merror = False
     gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
     g_matrix = gv.fit_transform(doc_split).T.tocsr()
 
@@ -58,7 +57,7 @@ def search():
     articles, errors, matches = [],[],0
     #Get queries from URL variable
     number = request.args.get('number')
-
+    searchtype = request.args.get('searchtype')
     words = request.args.get('words')
 
     if number and words: # if the user has entered something in both fields
@@ -95,6 +94,5 @@ def search():
     else:
         errors = ["Enter both a number and at least one word."]
 
-
     #Render index.html with matches variable
-    return render_template('index.html', articles=articles, errors=errors, matches=matches)
+    return render_template('index.html', articles=articles, errors=errors, matches=matches, searchtype=searchtype)
