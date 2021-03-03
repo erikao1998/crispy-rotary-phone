@@ -100,7 +100,7 @@ def search():
             all_years.append(horror_year)
 
      #if the user has entered something in both fields
-        if number and words and len(genres) > 0 and len(all_years) < len(genres):
+        if number and words and len(genres) > 0 and len(all_years) >= len(genres):
             for x in range(len(genres)):
                 all_docs, all_names = open_file(genres[x], all_years[x])
             number = int(number)# converts the number into an integer
