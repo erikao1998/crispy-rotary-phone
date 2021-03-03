@@ -81,10 +81,11 @@ def search():
     fantasy = [1966, 1983, 1984, 1985, 1995, 1998, 1999, 2000, 2001, 2005]
     animation = [1937, 1940, 1942, 1959, 1963, 1972, 1982, 1984, 1987, 1988, 1989, 1991, 1992, 1994, 1995, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005]
     horror = [1922, 1955, 1957, 1968, 1974, 1976, 1980, 1981, 1986, 1987, 1988, 1990, 1993, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005]
-    errors, all_years = [],[]
+    errors, all_years, searchtype = [],[],""
     all_articles = {} # created a dictionary instead of an array
     # the browser does a post request to the server when the user presses submit button.
     if request.method == "POST":
+        searchtype = request.args.get('searchtype')
         genres = request.form.getlist('genre')
         number = request.form.get('number')
         words = request.form.get('words')
@@ -100,45 +101,41 @@ def search():
             all_years.append(horror_year)
 
      #if the user has entered something in both fields
-        if number and words:
+        if number and words and len(genres) > 0 and len(all_years) < len(genres):
             for x in range(len(genres)):
                 all_docs, all_names = open_file(genres[x], all_years[x])
-            try:
-                number = int(number)# converts the number into an integer
-            except:
-                number = 0
-            if number <= 0:
-                errors = ["Invalid input. Please enter an integer larger than 0."]
-            else:
-                for w in words.split(): # separates input into words
-                    # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
-                    if w not in set(re.split("\W", (" ".join(subs.lower() for d in all_docs for subs in d.split())))) or w[-2:] == "'s":
-                        errors.append("") # add dummy item to errors list for the html to know to still show articles
-                        if w[-2:] == "'s": # if user searches for word with possessive suffix, show appropriate message
-                            errors.append("Write possessive suffixes as separate words without an apostrophe.")
-                        else: # otherwise tells user which word(s) is/are unknown
-                            errors.append("\"{:s}\" is an unknown word.".format(w))
-                        words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
-                        number -= 1 # decreases the user's number according to the number of unknown words
-                if len(words) > 0:
-                    if number <= 0 and len(words.split()) > 0:
-                        number = len(words.split())
-                    try:
-                        if len(genres) == 0:
-                            errors = ["Select at least one genre"]
-                        if len(all_years) < len(genres):
-                            errors = ["Select at least one year for the selected genres"]
-                        else:
-                            for x in range(len(genres)):
-                                doc, names = open_file(genres[x], all_years[x])
-                                articles = search_article(words, number, doc, names)
-                                all_articles[genres[x]] = articles
-
-                    except IndexError:
-                        errors = ["No matching documents found."]
+            number = int(number)# converts the number into an integer
+            for w in words.split(): # separates input into words
+                # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
+                if w not in set(re.split("\W", (" ".join(subs.lower() for d in all_docs for subs in d.split())))) \
+                 or w[-2:] == "'s" or "-" in w:
+                    errors.append("") # add dummy item to errors list for the html to know to still show articles
+                    if w[-2:] == "'s": # if user searches for word with possessive suffix, show appropriate message
+                        errors.append("Write possessive suffixes as separate words without an apostrophe.")
+                    elif "-" in w:
+                        errors.append("Write hyphenated words separately.")
+                    else: # otherwise tells user which word(s) is/are unknown
+                        errors.append("\"{:s}\" is an unknown word.".format(w))
+                    words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
+                    number -= 1 # decreases the user's number according to the number of unknown words
+            if len(words) > 0:
+                if number <= 0 and len(words.split()) > 0:
+                    number = len(words.split())
+                try:
+                    for x in range(len(genres)):
+                        doc, names = open_file(genres[x], all_years[x])
+                        articles = search_article(words, number, doc, names)
+                        all_articles[genres[x]] = articles
+                except IndexError:
+                    pass
         else:
-            errors = ["Enter both a number and at least one word."]
-
+            if len(genres) == 0:
+                errors = ["Select at least one genre"]
+            elif len(all_years) < len(genres):
+                errors = ["Select at least one year for the selected genres"]
+            else:
+                errors = ["Enter both a number and at least one word."]
 
     #Render index.html with matches variable
-    return render_template('index.html', articles=all_articles, errors=errors, fantasy_years=fantasy, animation_years=animation, horror_years=horror)
+    return render_template('index.html', searchtype=searchtype, articles=all_articles, errors=errors, \
+            fantasy_years=fantasy, animation_years=animation, horror_years=horror)
