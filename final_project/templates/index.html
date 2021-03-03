@@ -1,6 +1,22 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <script type="text/javascript">
+            function selects(year){
+                var ele=document.getElementsByName(year);
+                for(var i=0; i<ele.length; i++){
+                    if(ele[i].type=='checkbox')
+                        ele[i].checked=true;
+                }
+            }
+            function deSelect(year){
+                var ele=document.getElementsByName(year);
+                for(var i=0; i<ele.length; i++){
+                    if(ele[i].type=='checkbox')
+                        ele[i].checked=false;
+           }
+      }
+  </script>
   <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
   <style>
   body {
@@ -88,32 +104,42 @@
           <input type="checkbox" id="Horror" name="genre" value="Horror">
           <label for="Horror">Horror</label>
         </div><br>
+
         <div class="Fantasy selectt">
           <h3>Fantasy</h3>
           {% for year in fantasy_years %}
           <div class="years">
-          <input type="checkbox" name="fantasy_year" value={{year}} checked>
+          <input type="checkbox" name="fantasy_year" value={{year}} >
           <label for={{year}}>{{ year }}</label><br>
           </div>
           {% endfor %}
+          <br>
+          <input type="button" onclick='selects("fantasy_year")' value="Select All"/>
+          <input type="button" onclick='deSelect("fantasy_year")' value="Deselect All"/>
         </div>
         <div class="Animation selectt">
           <h3>Animation</h3>
           {% for year in animation_years %}
           <div class="years">
-          <input type="checkbox" name="animation_year" value={{year}} checked>
+          <input type="checkbox" name="animation_year" value={{year}} >
           <label for={{year}}>{{ year }}</label><br>
           </div>
           {% endfor %}
+          <br>
+          <input type="button" onclick='selects("animation_year")' value="Select All"/>
+          <input type="button" onclick='deSelect("animation_year")' value="Deselect All"/>
         </div>
         <div class="Horror selectt">
           <h3>Horror</h3>
           {% for year in horror_years %}
           <div class="years">
-          <input type="checkbox" name="horror_year" value={{year}} checked>
+          <input type="checkbox" name="horror_year" value={{year}} >
           <label for={{year}}>{{ year }}</label><br>
           </div>
           {% endfor %}
+          <br>
+          <input type="button" onclick='selects("horror_year")' value="Select All"/>
+          <input type="button" onclick='deSelect("horror_year")' value="Deselect All"/>
         </div>
         <script type="text/javascript">
           $(document).ready(function() {
