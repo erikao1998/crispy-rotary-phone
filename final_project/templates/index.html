@@ -1,11 +1,26 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
   <style>
   body {
     font-family: Garamond, serif;
     text-align: center;
+    background-color:AliceBlue;
     height: 100%;
+  }
+  .selectt, form {
+    display: none
+
+  }
+  .years {
+    display: inline-block;
+  }
+  li {
+    list-style: none;
+  }
+  ul {
+    padding: 0
   }
   table,th,td {
     border: 1px solid black;
@@ -13,6 +28,10 @@
   }
   .un {
     text-decoration: underline
+  }
+  .genres {
+    display: flex;
+    justify-content: center;
   }
   .left {
     text-align: left;
@@ -43,7 +62,7 @@
   </style>
   <title>Flask example</title>
 </head>
-<body style="background-color:AliceBlue;height: 100%;">
+<body>
   <img src="/static/divider.png" alt="divider" width="500" height="130">
   <section>
     <div class="left">
@@ -56,13 +75,76 @@
       <h1>Find articles with keywords</h1>
       <!--Reload the page with variable "query" in the URL-->
       <p id="noChoiceYet"><i>Choose a search type.</i></p>
-      <form id="form" style="display:none">
+      <form id="form" action="/search" method="POST">
         <label for="number">Number of words:</label>
         <input type="number" id="number" name="number" min="1" step="1"><br><br>
-        <label for="words" id="wordlabel">Word(s):</label>
+        <label for="words" id="wordlabel">Words:</label>
         <input type="text" id="words" name="words"><br><br>
-        <input type="submit" id="search" value="Search (Boolean/multi-word)">
+        <div class="genres">
+          <input type="checkbox" id="Fantasy" name="genre" value="Fantasy">
+          <label for="fantasy">Fantasy</label><br>
+          <input type="checkbox" id="Animation" name="genre" value="Animation">
+          <label for="Animation">Animation</label><br>
+          <input type="checkbox" id="Horror" name="genre" value="Horror">
+          <label for="Horror">Horror</label>
+        </div><br>
+        <div class="Fantasy selectt">
+          <h3>Fantasy</h3>
+          {% for year in fantasy_years %}
+          <div class="years">
+          <input type="checkbox" name="fantasy_year" value={{year}} checked>
+          <label for={{year}}>{{ year }}</label><br>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="Animation selectt">
+          <h3>Animation</h3>
+          {% for year in animation_years %}
+          <div class="years">
+          <input type="checkbox" name="animation_year" value={{year}} checked>
+          <label for={{year}}>{{ year }}</label><br>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="Horror selectt">
+          <h3>Horror</h3>
+          {% for year in horror_years %}
+          <div class="years">
+          <input type="checkbox" name="horror_year" value={{year}} checked>
+          <label for={{year}}>{{ year }}</label><br>
+          </div>
+          {% endfor %}
+        </div>
+        <script type="text/javascript">
+          $(document).ready(function() {
+              $('input[type="checkbox"]').click(function() {
+                  var inputValue = $(this).attr("value");
+                  $("." + inputValue).toggle();
+              });
+          });
+        </script>
+        <br><input type="submit" id="search" value="Search (Boolean/multi-word)"><br>
       </form>
+      <script>
+        function changeInputs(){
+          document.getElementById("noChoiceYet").style.display="none";
+          document.getElementsByTagName("form")[0].style.display="block";
+          var search_type="bmp";
+          document.getElementsByName("searchtype").forEach((stype) => {
+            if (stype.checked) {search_type=stype.value}
+          });
+          if(search_type=="stem"){
+            document.getElementById("number").setAttribute("disabled","");
+            document.getElementById("search").value="Search (stemming)";
+            document.getElementById("wordlabel").innerHTML="Word:"
+          }
+          else if(search_type=="bmp"){
+            document.getElementById("number").removeAttribute("disabled");
+            document.getElementById("search").value="Search (Boolean/multi-word)";
+            document.getElementById("wordlabel").innerHTML="Word(s):"
+          }
+        }
+      </script>
     </div>
     <div class="right" style="font-size:130%">
       <p>
@@ -80,49 +162,22 @@
       {% endif %}
     </div>
   </section>
-
   <table>
     {% if articles|length != 0 %}
     <p><b>{{articles|length}}</b> matching articles found:</p>
-    <tr>
-      <th class="un">Ranking</th>
-      <th class="un">Rel. score</th>
-      <th class="un">Name of article</th>
-      <th class="un">Preview</th>
-    </tr>
-    {% for rank, (score, (name, preview)) in articles %}
-    <tr>
-      <!--Display the number, name and a preview of the article-->
-      <th>{{ rank+1 }}.</th>
-      <td><em>{{ score }}</em></th>
-      <th><em>{{ name }}</em></th>
-      <td>{{ preview }}...</td>
-    </tr>
+    {% for name in articles.items() %}
+    <ul>
+      <!--Display the name and a preview of the article-->
+      <h2>{{ name[0] }}</h2>
+      {% for item in name[1] %}
+      <li><em>{{ item }}</em></li>
+      {% endfor %}
+    </ul>
     <!--End for loop for article names and previews-->
     {% endfor %}
     {% else %}
     <p><b>No</b> matching articles found.</p>
     {% endif %}
-    </table>
-    <script>
-      function changeInputs(){
-        document.getElementById("noChoiceYet").style.display="none";
-        document.getElementsByTagName("form")[0].style.display="block";
-        var search_type="bmp";
-        document.getElementsByName("searchtype").forEach((stype) => {
-          if (stype.checked) {search_type=stype.value}
-        });
-        if(search_type=="stem"){
-          document.getElementById("number").setAttribute("disabled","");
-          document.getElementById("search").value="Search (stemming)";
-          document.getElementById("wordlabel").innerHTML="Word:"
-        }
-        else if(search_type=="bmp"){
-          document.getElementById("number").removeAttribute("disabled");
-          document.getElementById("search").value="Search (Boolean/multi-word)";
-          document.getElementById("wordlabel").innerHTML="Word(s):"
-        }
-      }
-    </script>
+  </table>
 </body>
 </html>
