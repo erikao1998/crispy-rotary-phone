@@ -1,128 +1,130 @@
 <html>
-<head>
-  <meta charset="utf-8">
-  <style>
-  body {
-    font-family: Garamond, serif;
-    text-align: center;
-    height: 100%;
-  }
-  table,th,td {
-    border: 1px solid black;
-    border-collapse: collapse;
-  }
-  .un {
-    text-decoration: underline
-  }
-  .left {
-    text-align: left;
-    float: left;
-    width: 25%;
-  }
-  .middle {
-    float:left;
-    width: 50%;
-  }
-  .right {
-    float: left;
-    width: 25%;
-  }
-  /* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
-  @media (max-width: 600px) {
-    .left, .middle, .right {
-    width: 100%;
-    height: 9%;
-    }
-  }
-  /* Clear floats after the columns */
-  section::after {
-    content: "";
-    display: table;
-    clear: both;
-  }
-  </style>
-  <title>Flask example</title>
-</head>
-<body style="background-color:AliceBlue;height: 100%;">
-  <img src="/static/divider.png" alt="divider" width="500" height="130">
-  <section>
-    <div class="left">
-      <input form="form" type="radio" id="bmp" name="searchtype" value="bmp" onclick="changeInputs()">
-      <label for="bmp">Boolean/multi-word phrases</label><br>
-      <input form="form" type="radio" id="stem" name="searchtype" value="stem" onclick="changeInputs()">
-      <label for="stem">Stemming</label><br>
-    </div>
-    <div class="middle">
-      <h1>Find articles with keywords</h1>
-      <!--Reload the page with variable "query" in the URL-->
-      <p id="noChoiceYet"><i>Choose a search type.</i></p>
-      <form id="form" style="display:none">
-        <label for="number">Number of words:</label>
-        <input type="number" id="number" name="number" min="1" step="1"><br><br>
-        <label for="words" id="wordlabel">Word(s):</label>
-        <input type="text" id="words" name="words"><br><br>
-        <input type="submit" id="search" value="Search (Boolean/multi-word)">
-      </form>
-    </div>
-    <div class="right" style="font-size:130%">
-      <p>
-      <!--If there is one error in the list-->
-      {% if errors|length == 1 %}
-      <!--Show only that error-->
-      <p>{{errors[0]}}</p>
-      {% else %}
-      <!--Otherwise show each error and then go through each article
-          and show the name and a preview of it-->
-      {% for error in errors %}
-      <p>{{error}}</p>
-      <!--End for loop for errors-->
-      {% endfor %}
-      {% endif %}
-    </div>
-  </section>
+    <head>
+        <meta charset="utf-8">
+        <script src=
+"https://code.jquery.com/jquery-1.12.4.min.js"></script>
+        <style>
 
-  <table>
-    {% if articles|length != 0 %}
-    <p><b>{{articles|length}}</b> matching articles found:</p>
-    <tr>
-      <th class="un">Ranking</th>
-      <th class="un">Rel. score</th>
-      <th class="un">Name of article</th>
-      <th class="un">Preview</th>
-    </tr>
-    {% for rank, (score, (name, preview)) in articles %}
-    <tr>
-      <!--Display the number, name and a preview of the article-->
-      <th>{{ rank+1 }}.</th>
-      <td><em>{{ score }}</em></th>
-      <th><em>{{ name }}</em></th>
-      <td>{{ preview }}...</td>
-    </tr>
-    <!--End for loop for article names and previews-->
-    {% endfor %}
-    {% else %}
-    <p><b>No</b> matching articles found.</p>
-    {% endif %}
-    </table>
-    <script>
-      function changeInputs(){
-        document.getElementById("noChoiceYet").style.display="none";
-        document.getElementsByTagName("form")[0].style.display="block";
-        var search_type="bmp";
-        document.getElementsByName("searchtype").forEach((stype) => {
-          if (stype.checked) {search_type=stype.value}
-        });
-        if(search_type=="stem"){
-          document.getElementById("number").setAttribute("disabled","");
-          document.getElementById("search").value="Search (stemming)";
-          document.getElementById("wordlabel").innerHTML="Word:"
+        body {
+          font-family: Garamond, serif;
+          text-align: center;
+          background-color:AliceBlue;
         }
-        else if(search_type=="bmp"){
-          document.getElementById("number").removeAttribute("disabled");
-          document.getElementById("search").value="Search (Boolean/multi-word)";
-          document.getElementById("wordlabel").innerHTML="Word(s):"
+        .selectt {
+          display: none
+
         }
-      }
-    </script>
-</body>
+
+        .years {
+          display: inline-block;
+        }
+
+        li {
+          list-style: none;
+        }
+
+        ul {
+          padding: 0
+        }
+
+        table,th,td {
+          border: 1px solid black;
+          border-collapse: collapse;
+        }
+        .un {
+          text-decoration: underline
+        }
+
+        .genres {
+          display: flex;
+          justify-content: center;
+        }
+        </style>
+        <title>Flask example</title>
+    </head>
+    <body>
+        <img src="/static/divider.png" alt="divider" width="500" height="130">
+        <h1>Find articles with keywords</h1>
+        <!--Reload the page with variable "query" in the URL-->
+        <form action="/search" method="POST">
+          <label for="number">Number of words:</label>
+          <input type="text" id="number" name="number"><br><br>
+          <label for="words">Words:</label>
+          <input type="text" id="words" name="words"><br><br>
+
+          <div class="genres">
+            <input type="checkbox" id="Fantasy" name="genre" value="Fantasy">
+            <label for="fantasy">Fantasy</label><br>
+            <input type="checkbox" id="Animation" name="genre" value="Animation">
+            <label for="Animation">Animation</label><br>
+            <input type="checkbox" id="Horror" name="genre" value="Horror">
+            <label for="Horror">Horror</label>
+          </div><br>
+          <div class="Fantasy selectt">
+            <h3>Fantasy</h3>
+            {% for year in fantasy_years %}
+            <div class="years">
+            <input type="checkbox" name="fantasy_year" value={{year}} checked>
+            <label for={{year}}>{{ year }}</label><br>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="Animation selectt">
+            <h3>Animation</h3>
+            {% for year in animation_years %}
+            <div class="years">
+            <input type="checkbox" name="animation_year" value={{year}} checked>
+            <label for={{year}}>{{ year }}</label><br>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="Horror selectt">
+            <h3>Horror</h3>
+            {% for year in horror_years %}
+            <div class="years">
+            <input type="checkbox" name="horror_year" value={{year}} checked>
+            <label for={{year}}>{{ year }}</label><br>
+            </div>
+            {% endfor %}
+
+          </div>
+          <script type="text/javascript">
+            $(document).ready(function() {
+                $('input[type="checkbox"]').click(function() {
+                    var inputValue = $(this).attr("value");
+                    $("." + inputValue).toggle();
+                });
+            });
+          </script>
+          <br><input type="submit" value="Submit"><br>
+        </form>
+        <table>
+            <!--If there is one error in the list-->
+            {% if errors|length == 1 %}
+            <!--Show only that error-->
+            <p>{{errors[0]}}</p>
+            {% else %}
+            <!--Otherwise show each error and then go through each article
+                and show the name and a preview of it-->
+            {% for error in errors %}
+            <p style="font-size:130%">{{error}}</p>
+            <!--End for loop for errors-->
+            {% endfor %}
+            {% if articles|length != 0 %}
+            {% for name in articles.items() %}
+            <ul>
+                <!--Display the name and a preview of the article-->
+                <h2>{{ name[0] }}</h2>
+                {% for item in name[1] %}
+                  <li><em>{{ item }}</em></li>
+                {% endfor %}
+
+            </ul>
+            <!--End for loop for article names and previews-->
+            {% endfor %}
+            {% endif %}
+            {% endif %}
+        </table>
+    </body>
 </html>
