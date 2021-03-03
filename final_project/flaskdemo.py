@@ -121,10 +121,13 @@ def search():
                 if number <= 0 and len(words.split()) > 0:
                     number = len(words.split())
                 try:
-                    for x in range(len(genres)):
-                        doc, names = open_file(genres[x], all_years[x])
-                        articles = search_article(words, number, doc, names)
-                        all_articles[genres[x]] = articles
+                    if number <= len(words.split()):
+                        for x in range(len(genres)):
+                            doc, names = open_file(genres[x], all_years[x])
+                            articles = search_article(words, number, doc, names)
+                            all_articles[genres[x]] = articles
+                    else:
+                        errors = ["Enter as many or fewer words than in the \"Number of words\" field."]
                 except IndexError:
                     pass
         else:
