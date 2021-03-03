@@ -195,7 +195,8 @@
       <!--Display the name and a preview of the article-->
       <h2>{{ name[0] }}</h2>
       {% for item in name[1] %}
-      <li><em>{{ item }}</em></li>
+      <li><em>{{ item[0] }}</em></li>
+      <li>{{ item[1] }}</li>
       {% endfor %}
     </ul>
     <!--End for loop for article names and previews-->

@@ -41,17 +41,22 @@ def open_file(genre, selected_years):
     return subtitles, names
 
 # removes every extra character from the titles of the matching movies
-def manipulate(list):
+def manipulate(list, subtitles):
     new_list = []
-    for item in list:
-        new_item = re.sub(r"\d*_\d*_\d*_(.*)\.xml", r"\1", item) # removes numbers and the file type
+    preview_list = []
+    for i in range(len(list)):
+        new_item = re.sub(r"\d*_\d*_\d*_(.*)\.xml", r"\1", list[i]) # removes numbers and the file type
         new_item = " ".join(x for x in new_item.split("_")) # removes underscores that separated the parts of the title
         if new_item not in new_list: # prevents duplicates (that otherwise are quite common)
             new_list.append(new_item)
-    return new_list
+            preview_list.append(subtitles[i][0:200])
+    return new_list, preview_list
+
 
 def search_article(query_string, number, doc, names):
     match_names = []
+    subtitles = []
+    matches_and_previews = []
     gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
     g_matrix = gv.fit_transform(doc).T.tocsr()
 
@@ -67,10 +72,14 @@ def search_article(query_string, number, doc, names):
     # Output result
     for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
          match_names.append(names[doc_idx])
+         subtitles.append(doc[doc_idx])
 
-    match_names = manipulate(match_names)
+    match_names, subtitles = manipulate(match_names, subtitles)
 
-    return match_names
+    for i in range(len(match_names)):
+        matches_and_previews.append((match_names[i], subtitles[i]))
+
+    return matches_and_previews
 
 
 # Function search() is associated with the address base URL + "/search"
@@ -121,13 +130,10 @@ def search():
                 if number <= 0 and len(words.split()) > 0:
                     number = len(words.split())
                 try:
-                    if number <= len(words.split()):
-                        for x in range(len(genres)):
-                            doc, names = open_file(genres[x], all_years[x])
-                            articles = search_article(words, number, doc, names)
-                            all_articles[genres[x]] = articles
-                    else:
-                        errors = ["Enter as many or fewer words than in the \"Number of words\" field."]
+                    for x in range(len(genres)):
+                        doc, names = open_file(genres[x], all_years[x])
+                        articles = search_article(words, number, doc, names)
+                        all_articles[genres[x]] = articles
                 except IndexError:
                     pass
         else:
