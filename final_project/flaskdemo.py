@@ -10,7 +10,7 @@ import re
 import numpy as np
 import nltk
 from nltk.stem.snowball import SnowballStemmer
-from nltk.tokenize import tokenize
+from nltk import tokenize
 
 #Initialize Flask instance
 app = Flask(__name__)
@@ -184,7 +184,7 @@ def search():
 
                     for genre in genres:
                         doc, names = open_file(genre)
-                        articles = search_article(words, number, doc, names) # search normally
+                        articles = stem_search(words, number, doc, names) # search normally
                         all_articles[genre] = articles
                         # else:
                         #     errors = ["Wrong number of words."]
