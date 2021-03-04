@@ -18,6 +18,7 @@
       }
   </script>
   <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
   <style>
   body {
     font-family: Garamond, serif;
@@ -149,8 +150,10 @@
               });
           });
         </script>
-        <br><input type="submit" id="search" value="Search (Boolean/multi-word)"><br>
+        <br><input type="submit" id="search" value="Search (Boolean/multi-word)" onclick="$('#loading').show();"><br>
       </form>
+      <div id="loading" style="display:none;"><img src="\static\ajax-loader.gif" alt="" />
+      <br>Loading!</div>
       <script>
         function changeInputs(){
           document.getElementById("noChoiceYet").style.display="none";
