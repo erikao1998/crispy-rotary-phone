@@ -136,7 +136,7 @@ def search():
                             articles = search_article(words, number, doc, names)
                             all_articles[genres[x]] = articles
                     else:
-                        errors = ["Enter as many or fewer words than in the \"Number of words\" field."]
+                        errors = ["Enter at least as many words as the number entered in the \"Number of words\" field."]
                 except IndexError:
                     pass
         else:
