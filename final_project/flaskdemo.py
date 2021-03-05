@@ -2,9 +2,9 @@ import xml.etree.ElementTree as ET
 import os
 from flask import Flask, render_template, request
 from sklearn.feature_extraction.text import TfidfVectorizer
-import re
+import xml.etree.ElementTree as ET
+import os, re, nltk
 import numpy as np
-import nltk
 
 #Initialize Flask instance
 app = Flask(__name__)
@@ -21,7 +21,7 @@ def parser(polku):
     for elem in root: # the loop goes through the XML tree
         for subelem in elem:
             if subelem.text != None:
-                subtitle = subtitle + " " + subelem.text # adds all the words of the file into the string
+                subtitle += " " + subelem.text # adds all the words of the file into the string
     return subtitle
 
 
@@ -43,18 +43,22 @@ def open_file(genre, selected_years):
     return subtitles, names
 
 # removes every extra character from the titles of the matching movies
-def manipulate(list):
+def manipulate(list, subtitles):
     new_list = []
-    for item in list:
-        new_item = re.sub(r"\d*_\d*_\d*_(.*)\.xml", r"\1", item) # removes numbers and the file type
+    preview_list = []
+    for i in range(len(list)):
+        new_item = re.sub(r"\d*_\d*_\d*_(.*)\.xml", r"\1", list[i]) # removes numbers and the file type
         new_item = " ".join(x for x in new_item.split("_")) # removes underscores that separated the parts of the title
         if new_item not in new_list: # prevents duplicates (that otherwise are quite common)
             new_list.append(new_item)
-    return new_list
+            preview_list.append(subtitles[i][0:200])
+    return new_list, preview_list
+
 
 def search_article(query_string, number, doc, names):
     match_names = []
-    merror = False
+    subtitles = []
+    matches_and_previews = []
     gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
     g_matrix = gv.fit_transform(doc).T.tocsr()
 
@@ -70,10 +74,14 @@ def search_article(query_string, number, doc, names):
     # Output result
     for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
          match_names.append(names[doc_idx])
+         subtitles.append(doc[doc_idx])
 
-    match_names = manipulate(match_names)
+    match_names, subtitles = manipulate(match_names, subtitles)
 
-    return match_names
+    for i in range(len(match_names)):
+        matches_and_previews.append((match_names[i], subtitles[i]))
+
+    return matches_and_previews
 
 
 # Function search() is associated with the address base URL + "/search"
@@ -82,12 +90,12 @@ def search_article(query_string, number, doc, names):
 def search():
     fantasy = [1966, 1983, 1984, 1985, 1995, 1998, 1999, 2000, 2001, 2005]
     animation = [1937, 1940, 1942, 1959, 1963, 1972, 1982, 1984, 1987, 1988, 1989, 1991, 1992, 1994, 1995, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005]
-    horror = [1922, 1955, 1957, 1068, 1974, 1976, 1980, 1981, 1986, 1987, 1988, 1990, 1993, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005]
-    errors =[]
-    all_years = []
+    horror = [1922, 1955, 1957, 1968, 1974, 1976, 1980, 1981, 1986, 1987, 1988, 1990, 1993, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005]
+    errors, all_years, searchtype = [],[],""
     all_articles = {} # created a dictionary instead of an array
     # the browser does a post request to the server when the user presses submit button.
     if request.method == "POST":
+        searchtype = request.args.get('searchtype')
         genres = request.form.getlist('genre')
         number = request.form.get('number')
         words = request.form.get('words')
@@ -102,51 +110,45 @@ def search():
         if len(horror_year) > 0 and "Horror" in genres:
             all_years.append(horror_year)
 
-        number = int(number)
-     # THE COMMENTED CODE BELOW CONTAINS WHAT IS LEFT FROM THE CODE THAT ALLOWS THE MULTI WORD SEARCH. I COULDN'T MAKE IT TO WORK WITH THE CURRENT CORPUS
-     # -------------
      #if the user has entered something in both fields
-     # try:
-         # converts the number into an integer
-        # except Exception as e:
-        #     print(e)
-            #     number = 0
-            # if number <= 0:
-            #     errors = ["Invalid input. Please enter an integer larger than 0."]
-            # else:
-                # for w in words.split(): # separates input into words
-                #     # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
-                #     if w not in set(re.split("\W", (" ".join(y.lower() for y in subtitles)))) or w[-2:] == "'s":
-                #         errors.append("") # add dummy item to errors list for the html to know to still show articles
-                #         if w[-2:] == "'s": # if user searches for word with possessive suffix, show appropriate message
-                #             errors.append("Write possessive suffixes as separate words without an apostrophe.")
-                #         else: # otherwise tells user which word(s) is/are unknown
-                #             errors.append("\"{:s}\" is an unknown word.".format(w))
-                #         words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
-                #         number -= 1 # decreases the user's number according to the number of unknown words
-        # ---------
-
-        if len(words) > 0:
-            if number <= 0 and len(words.split()) > 0:
-                number = len(words.split())
-            try:
-                if len(genres) == 0:
-                    errors = ["Select at least one genre"]
-                if len(all_years) < len(genres):
-                    errors = ["Select at least one year for the selected genres"]
-                else:
-
-                    for x in range(len(genres)):
-                        doc, names = open_file(genres[x], all_years[x])
-                        articles = search_article(words, number, doc, names)
-                        all_articles[genres[x]] = articles
-
-            except IndexError:
-                errors = ["No matching documents found."]
-
+        if number and words and len(genres) > 0 and len(all_years) >= len(genres):
+            for x in range(len(genres)):
+                all_docs, all_names = open_file(genres[x], all_years[x])
+            number = int(number)# converts the number into an integer
+            for w in words.split(): # separates input into words
+                # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
+                if w not in set(re.split("\W", (" ".join(subs.lower() for d in all_docs for subs in d.split())))) \
+                 or w[-2:] == "'s" or "-" in w:
+                    errors.append("") # add dummy item to errors list for the html to know to still show articles
+                    if w[-2:] == "'s": # if user searches for word with possessive suffix, show appropriate message
+                        errors.append("Write possessive suffixes as separate words without an apostrophe.")
+                    elif "-" in w:
+                        errors.append("Write hyphenated words separately.")
+                    else: # otherwise tells user which word(s) is/are unknown
+                        errors.append("\"{:s}\" is an unknown word.".format(w))
+                    words = " ".join([word for word in words.split() if word != w]) # deletes unknown words from input
+                    number -= 1 # decreases the user's number according to the number of unknown words
+            if len(words) > 0:
+                if number <= 0 and len(words.split()) > 0:
+                    number = len(words.split())
+                try:
+                    if number <= len(words.split()):
+                        for x in range(len(genres)):
+                            doc, names = open_file(genres[x], all_years[x])
+                            articles = search_article(words, number, doc, names)
+                            all_articles[genres[x]] = articles
+                    else:
+                        errors = ["Enter as many or fewer words than in the \"Number of words\" field."]
+                except IndexError:
+                    pass
         else:
-            errors = ["Enter both a number and at least one word."]
-
+            if len(genres) == 0:
+                errors = ["Select at least one genre"]
+            elif len(all_years) < len(genres):
+                errors = ["Select at least one year for the selected genres"]
+            else:
+                errors = ["Enter both a number and at least one word."]
 
     #Render index.html with matches variable
-    return render_template('index.html', articles=all_articles, errors=errors, fantasy_years=fantasy, animation_years=animation, horror_years=horror)
+    return render_template('index.html', searchtype=searchtype, articles=all_articles, errors=errors, \
+            fantasy_years=fantasy, animation_years=animation, horror_years=horror)
