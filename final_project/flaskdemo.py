@@ -5,6 +5,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import xml.etree.ElementTree as ET
 import os, re, nltk
 import numpy as np
+from nltk.stem.snowball import SnowballStemmer
+from nltk import tokenize
 
 #Initialize Flask instance
 app = Flask(__name__)
@@ -80,14 +82,14 @@ def select_movies(genre, years):
 
 
 
-def search_article(query_string, number, doc, names):
+def search_article(query_string, number, doc, names, stemmed):
 
     match_names = []
     subtitles = []
     matches_and_previews = []
 
     gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
-    g_matrix = gv.fit_transform(doc).T.tocsr()
+    g_matrix = gv.fit_transform(stemmed).T.tocsr()
 
     # Vectorize query string
     query_vec = gv.transform([query_string]).tocsc()
@@ -114,6 +116,27 @@ def search_article(query_string, number, doc, names):
 
     return matches_and_previews
 
+def stem_search(doc, input): # stem search as a separate function (if we can make it work it might be possible to implement it to the previous search function)
+    stem_words, stemmed_input = [], []
+    snow_stemmer = SnowballStemmer(language='english')
+    for w in doc:
+        for word in w.split():
+            x = snow_stemmer.stem(word)
+            stem_words.append(x)
+        stemmed_text = " ".join(stem_words)
+        stem_words.append(stemmed_text)
+
+    for w in input.split():
+        x = snow_stemmer.stem(w)
+        stemmed_input.append(x)
+    stemmed_input = " ".join(stemmed_input)
+    # Vectorize query string
+
+    # Cosine similarity
+    # print(stemmed_text)
+    # print(stemmed_input)
+
+    return stem_words, stemmed_input
 
 # Function search() is associated with the address base URL + "/search"
 # Had some problems with multiword search so currently works only with one word
@@ -122,11 +145,11 @@ def search():
     fantasy = [1966, 1983, 1984, 1985, 1995, 1998, 1999, 2000, 2001, 2005]
     animation = [1937, 1940, 1942, 1959, 1963, 1972, 1982, 1984, 1987, 1988, 1989, 1991, 1992, 1994, 1995, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005]
     horror = [1922, 1955, 1957, 1968, 1974, 1976, 1980, 1981, 1986, 1987, 1988, 1990, 1993, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005]
-    errors, all_years, searchtype = [],[],""
+    errors, all_years, searchtype, matches = [],[],"",0
     all_articles = {} # created a dictionary instead of an array
     # the browser does a post request to the server when the user presses submit button.
     if request.method == "POST":
-        searchtype = request.args.get('searchtype')
+        searchtype = request.form.get('searchtype')
         genres = request.form.getlist('genre')
         number = request.form.get('number')
         words = request.form.get('words')
@@ -166,9 +189,12 @@ def search():
                     if number <= len(words.split()):
                         for x in range(len(genres)):
                             subtitles, names = select_movies(genres[x], all_years[x])
-
-                            articles = search_article(words, number, subtitles, names)
-
+                            if searchtype=="stem":
+                                stemmed_text, words = stem_search(subtitles, words)
+                            else:
+                                stemmed_text=subtitles
+                            articles = search_article(words, number, subtitles, names, stemmed_text)
+                            matches += len(articles)
                             all_articles[genres[x]] = articles
                     else:
                         errors = ["Enter at least as many words as the number entered in the \"Number of words\" field."]
@@ -184,4 +210,4 @@ def search():
 
     #Render index.html with matches variable
     return render_template('index.html', searchtype=searchtype, articles=all_articles, errors=errors, \
-            fantasy_years=fantasy, animation_years=animation, horror_years=horror)
+            fantasy_years=fantasy, animation_years=animation, horror_years=horror, matches=matches)
