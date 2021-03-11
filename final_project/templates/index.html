@@ -22,13 +22,16 @@
   <style>
   body {
     font-family: Garamond, serif;
+    color:white;
+	  text-shadow: -1px 1px 0 #000,1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000;
     text-align: center;
-    background-color:AliceBlue;
     height: 100%;
+    background-image:url('static/8728.jpg');
+    background-attachment: fixed;
+    background-size: cover;
   }
-  .selectt, form {
+  .hide, form {
     display: none
-
   }
   .years {
     display: inline-block;
@@ -80,24 +83,25 @@
   <title>Flask example</title>
 </head>
 <body>
-  <img src="/static/divider.png" alt="divider" width="500" height="130">
+  <input form="form" type="radio" id="bmp" name="searchtype" value="bmp" onclick="changeInputs()">
+  <label for="bmp">Boolean/multi-word phrases</label>
+  <input form="form" type="radio" id="stem" name="searchtype" value="stem" onclick="changeInputs()">
+  <label for="stem">Stemming (not working properly)</label><br>
   <section>
     <div class="left">
-      <input form="form" type="radio" id="bmp" name="searchtype" value="bmp" onclick="changeInputs()">
-      <label for="bmp">Boolean/multi-word phrases</label><br>
-      <input form="form" type="radio" id="stem" name="searchtype" value="stem" onclick="changeInputs()">
-      <label for="stem">Stemming</label><br>
+      <p></p>
     </div>
     <div class="middle">
       <h1>Find articles with keywords</h1>
       <!--Reload the page with variable "query" in the URL-->
       <p id="noChoiceYet"><i>Choose a search type.</i></p>
       <form id="form" action="/search" method="POST">
+        <p class="hide" id="stemerror" disabled><i>Stemming not currently available, see the wiki for specifics</i></p>
         <label for="number">Number of words:</label>
         <input type="number" id="number" name="number" min="1" step="1"><br><br>
         <label for="words" id="wordlabel">Words:</label>
         <input type="text" id="words" name="words"><br><br>
-        <div class="genres">
+        <div class="genres" id="genres">
           <input type="checkbox" id="Fantasy" name="genre" value="Fantasy">
           <label for="fantasy">Fantasy</label><br>
           <input type="checkbox" id="Animation" name="genre" value="Animation">
@@ -106,7 +110,7 @@
           <label for="Horror">Horror</label>
         </div><br>
 
-        <div class="Fantasy selectt">
+        <div class="Fantasy hide">
           <h3>Fantasy</h3>
           {% for year in fantasy_years %}
           <div class="years">
@@ -118,7 +122,7 @@
           <input type="button" onclick='selects("fantasy_year")' value="Select All"/>
           <input type="button" onclick='deSelect("fantasy_year")' value="Deselect All"/>
         </div>
-        <div class="Animation selectt">
+        <div class="Animation hide">
           <h3>Animation</h3>
           {% for year in animation_years %}
           <div class="years">
@@ -130,7 +134,7 @@
           <input type="button" onclick='selects("animation_year")' value="Select All"/>
           <input type="button" onclick='deSelect("animation_year")' value="Deselect All"/>
         </div>
-        <div class="Horror selectt">
+        <div class="Horror hide">
           <h3>Horror</h3>
           {% for year in horror_years %}
           <div class="years">
@@ -164,13 +168,21 @@
           });
           if(search_type=="stem"){
             document.getElementById("number").setAttribute("disabled","");
+            document.getElementById("words").setAttribute("disabled","");
+            document.getElementById("search").setAttribute("disabled","");
             document.getElementById("search").value="Search (stemming)";
-            document.getElementById("wordlabel").innerHTML="Word:"
+            document.getElementById("wordlabel").innerHTML="Word:";
+            document.getElementById("genres").style.display="none";
+            document.getElementById("stemerror").style.display="block"
           }
           else if(search_type=="bmp"){
             document.getElementById("number").removeAttribute("disabled");
+            document.getElementById("words").removeAttribute("disabled");
+            document.getElementById("search").removeAttribute("disabled");
             document.getElementById("search").value="Search (Boolean/multi-word)";
-            document.getElementById("wordlabel").innerHTML="Word(s):"
+            document.getElementById("wordlabel").innerHTML="Word(s):";
+            document.getElementById("genres").removeAttribute("style","display");
+            document.getElementById("stemerror").style.display="none"
           }
         }
       </script>
@@ -193,10 +205,11 @@
   </section>
   <table>
     {% if articles|length != 0 %}
+    <p><b>{{matches}}</b> matching articles found.</p>
     {% for name in articles.items() %}
     <ul>
       <!--Display the name and a preview of the article-->
-      <h2>{{ name[0] }}</h2>
+      <h2>{{ name[0] }} ({{name[1]|length}} matches)</h2>
       {% for item in name[1] %}
       <li><em>{{ item[0] }}</em></li>
       <li>{{ item[1] }}</li>
