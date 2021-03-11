@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as ET
+import os
 from flask import Flask, render_template, request
 from sklearn.feature_extraction.text import TfidfVectorizer
 import xml.etree.ElementTree as ET
@@ -23,40 +25,67 @@ def parser(polku):
     return subtitle
 
 
-def open_file(genre, selected_years):
-    subtitles = []
-    names = []
+# def open_file(genre, selected_years):
+def open_file():
+    dict = {}
+    genres = ["Fantasy", "Animation", "Horror"]
+    for genre in genres:
+        root_path = r"static\en\OpenSubtitles\xml\en"
+        directory = os.path.join(root_path, genre)
+        values = []
 
-    root_path = r"static\en\OpenSubtitles\xml\en"
-    directory = os.path.join(root_path, genre)
+        for year in os.listdir(directory):
+            folder = os.path.join(directory, year)
+            x = []
+            for filename in os.listdir(folder):
 
-    for year in selected_years:
-        folder = os.path.join(directory, year)
-        for filename in os.listdir(folder):
+                if filename.endswith(".xml"):
+                    path = os.path.join(folder, filename)
+                    x.append((filename, parser(path)))
 
-            if filename.endswith(".xml"):
-                names.append(filename)
-                path = os.path.join(folder, filename)
-                subtitles.append(parser(path))
-    return subtitles, names
+            values.append((year, x))
+        dict[genre] = values
+
+    return dict
+
 
 # removes every extra character from the titles of the matching movies
-def manipulate(list, subtitles):
+def manipulate(names, subtitles):
     new_list = []
     preview_list = []
-    for i in range(len(list)):
-        new_item = re.sub(r"\d*_\d*_\d*_(.*)\.xml", r"\1", list[i]) # removes numbers and the file type
+    for i in range(len(names)):
+        new_item = re.sub(r"\d*_\d*_\d*_(.*)\.xml", r"\1", names[i]) # removes numbers and the file type
         new_item = " ".join(x for x in new_item.split("_")) # removes underscores that separated the parts of the title
         if new_item not in new_list: # prevents duplicates (that otherwise are quite common)
             new_list.append(new_item)
             preview_list.append(subtitles[i][0:200])
     return new_list, preview_list
 
+dict = open_file()
+
+def select_movies(genre, years):
+
+    names = []
+    subtitles = []
+
+    for key in dict:
+        if key == genre:
+            for item in dict[key]:
+            	if item[0] in years:
+            		for subtitle in item[1]:
+            			names.append(subtitle[0])
+            			subtitles.append(subtitle[1])
+
+    return subtitles, names
+
+
 
 def search_article(query_string, number, doc, names):
+
     match_names = []
     subtitles = []
     matches_and_previews = []
+
     gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
     g_matrix = gv.fit_transform(doc).T.tocsr()
 
@@ -65,10 +94,12 @@ def search_article(query_string, number, doc, names):
 
     hits = np.dot(query_vec, g_matrix)
 
+
     # Rank hits
     ranked_scores_and_doc_ids = \
     sorted(zip(np.array(hits[hits.nonzero()])[0], hits.nonzero()[1]),
            reverse=True)
+
     # Output result
     for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
          match_names.append(names[doc_idx])
@@ -76,8 +107,10 @@ def search_article(query_string, number, doc, names):
 
     match_names, subtitles = manipulate(match_names, subtitles)
 
+
     for i in range(len(match_names)):
         matches_and_previews.append((match_names[i], subtitles[i]))
+    #print(matches_and_previews)
 
     return matches_and_previews
 
@@ -111,7 +144,7 @@ def search():
      #if the user has entered something in both fields
         if number and words and len(genres) > 0 and len(all_years) >= len(genres):
             for x in range(len(genres)):
-                all_docs, all_names = open_file(genres[x], all_years[x])
+                all_docs, all_names = select_movies(genres[x], all_years[x])
             number = int(number)# converts the number into an integer
             for w in words.split(): # separates input into words
                 # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
@@ -132,8 +165,10 @@ def search():
                 try:
                     if number <= len(words.split()):
                         for x in range(len(genres)):
-                            doc, names = open_file(genres[x], all_years[x])
-                            articles = search_article(words, number, doc, names)
+                            subtitles, names = select_movies(genres[x], all_years[x])
+
+                            articles = search_article(words, number, subtitles, names)
+
                             all_articles[genres[x]] = articles
                     else:
                         errors = ["Enter at least as many words as the number entered in the \"Number of words\" field."]
