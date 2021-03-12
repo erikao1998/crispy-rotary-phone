@@ -211,7 +211,7 @@
       <!--Display the name and a preview of the article-->
       <h2>{{ name[0] }} ({{name[1]|length}} matches)</h2>
       {% for item in name[1] %}
-      <li><em>{{ item[0] }}</em></li>
+      <li><em>{{ item[0] }}</em> (<b>{{ item[2] }}</b>)</li>
       <li>{{ item[1] }}</li>
       {% endfor %}
     </ul>

@@ -43,7 +43,7 @@ def open_file():
 
                 if filename.endswith(".xml"):
                     path = os.path.join(folder, filename)
-                    x.append((filename, parser(path)))
+                    x.append([filename, parser(path), year])
 
             values.append((year, x))
         dict[genre] = values
@@ -52,40 +52,48 @@ def open_file():
 
 
 # removes every extra character from the titles of the matching movies
-def manipulate(names, subtitles):
+def manipulate(names, subtitles, years):
     new_list = []
     preview_list = []
+    new_years = []
     for i in range(len(names)):
         new_item = re.sub(r"\d*_\d*_\d*_(.*)\.xml", r"\1", names[i]) # removes numbers and the file type
         new_item = " ".join(x for x in new_item.split("_")) # removes underscores that separated the parts of the title
         if new_item not in new_list: # prevents duplicates (that otherwise are quite common)
             new_list.append(new_item)
             preview_list.append(subtitles[i][0:200])
-    return new_list, preview_list
+            new_years.append(years[i])
+    return new_list, preview_list, new_years
 
 dict = open_file()
 
 def select_movies(genre, years):
 
+
     names = []
     subtitles = []
+    selected_years = []
 
     for key in dict:
         if key == genre:
             for item in dict[key]:
-            	if item[0] in years:
-            		for subtitle in item[1]:
-            			names.append(subtitle[0])
-            			subtitles.append(subtitle[1])
+                if item[0] in years:
+                    for subtitle in item[1]:
 
-    return subtitles, names
+                        names.append(subtitle[0])
+                        subtitles.append(subtitle[1])
+                        selected_years.append(subtitle[2])
+
+    return subtitles, names, selected_years
 
 
 
-def search_article(query_string, number, doc, names, stemmed):
+def search_article(query_string, number, doc, names, stemmed, years):
+
 
     match_names = []
     subtitles = []
+    match_years = []
     matches_and_previews = []
 
     gv = TfidfVectorizer(lowercase=True, sublinear_tf=True, use_idf=True, norm="l2", token_pattern=r'(?u)\b\w+\b', ngram_range=(number, number))
@@ -106,13 +114,18 @@ def search_article(query_string, number, doc, names, stemmed):
     for i, (score, doc_idx) in enumerate(ranked_scores_and_doc_ids):
          match_names.append(names[doc_idx])
          subtitles.append(doc[doc_idx])
+         match_years.append(years[doc_idx])
 
-    match_names, subtitles = manipulate(match_names, subtitles)
+
+
+
+    match_names, subtitles, match_years = manipulate(match_names, subtitles, match_years)
+
 
 
     for i in range(len(match_names)):
-        matches_and_previews.append((match_names[i], subtitles[i]))
-    #print(matches_and_previews)
+        matches_and_previews.append([match_names[i], subtitles[i], match_years[i]])
+
 
     return matches_and_previews
 
@@ -133,8 +146,6 @@ def stem_search(doc, input): # stem search as a separate function (if we can mak
     # Vectorize query string
 
     # Cosine similarity
-    # print(stemmed_text)
-    # print(stemmed_input)
 
     return stem_words, stemmed_input
 
@@ -167,7 +178,7 @@ def search():
      #if the user has entered something in both fields
         if number and words and len(genres) > 0 and len(all_years) >= len(genres):
             for x in range(len(genres)):
-                all_docs, all_names = select_movies(genres[x], all_years[x])
+                all_docs, all_names, selected_years = select_movies(genres[x], all_years[x])
             number = int(number)# converts the number into an integer
             for w in words.split(): # separates input into words
                 # if a word (letters separated by non-letters) is not in the documents, informs user of the unknown word(s)
@@ -188,12 +199,13 @@ def search():
                 try:
                     if number <= len(words.split()):
                         for x in range(len(genres)):
-                            subtitles, names = select_movies(genres[x], all_years[x])
+                            subtitles, names, years = select_movies(genres[x], all_years[x])
+
                             if searchtype=="stem":
                                 stemmed_text, words = stem_search(subtitles, words)
                             else:
                                 stemmed_text=subtitles
-                            articles = search_article(words, number, subtitles, names, stemmed_text)
+                            articles = search_article(words, number, subtitles, names, stemmed_text, years)
                             matches += len(articles)
                             all_articles[genres[x]] = articles
                     else:
