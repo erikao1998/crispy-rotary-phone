@@ -65,15 +65,14 @@ def manipulate(names, subtitles, years):
             new_years.append(years[i])
     return new_list, preview_list, new_years
 
+
 dict = open_file()
 
+
 def select_movies(genre, years):
-
-
     names = []
     subtitles = []
     selected_years = []
-
     for key in dict:
         if key == genre:
             for item in dict[key]:
@@ -87,10 +86,7 @@ def select_movies(genre, years):
     return subtitles, names, selected_years
 
 
-
 def search_article(query_string, number, doc, names, stemmed, years):
-
-
     match_names = []
     subtitles = []
     match_years = []
@@ -116,18 +112,13 @@ def search_article(query_string, number, doc, names, stemmed, years):
          subtitles.append(doc[doc_idx])
          match_years.append(years[doc_idx])
 
-
-
-
     match_names, subtitles, match_years = manipulate(match_names, subtitles, match_years)
-
-
-
+    nc = ['and','of','the','a','an','on','in','de','dei','des','to']
     for i in range(len(match_names)):
-        matches_and_previews.append([match_names[i], subtitles[i], match_years[i]])
-
+        matches_and_previews.append([" ".join([w.upper() if w in ['ii','iii'] else w.capitalize() if w not in nc or w==match_names[i].split()[0] else w for w in match_names[i].split()]), subtitles[i], match_years[i]])
 
     return matches_and_previews
+
 
 def stem_search(doc, input): # stem search as a separate function (if we can make it work it might be possible to implement it to the previous search function)
     stem_words, stemmed_input = [], []
@@ -142,12 +133,9 @@ def stem_search(doc, input): # stem search as a separate function (if we can mak
     for w in input.split():
         x = snow_stemmer.stem(w)
         stemmed_input.append(x)
-    stemmed_input = " ".join(stemmed_input)
-    # Vectorize query string
-
-    # Cosine similarity
 
     return stem_words, stemmed_input
+
 
 # Function search() is associated with the address base URL + "/search"
 # Had some problems with multiword search so currently works only with one word
@@ -221,5 +209,5 @@ def search():
                 errors = ["Enter both a number and at least one word."]
 
     #Render index.html with matches variable
-    return render_template('index.html', searchtype=searchtype, articles=all_articles, errors=errors, \
+    return render_template('index.html', articles=all_articles, errors=errors, \
             fantasy_years=fantasy, animation_years=animation, horror_years=horror, matches=matches)

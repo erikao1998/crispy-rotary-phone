@@ -23,12 +23,20 @@
   body {
     font-family: Garamond, serif;
     color:white;
-	  text-shadow: -1px 1px 0 #000,1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000;
+    text-shadow: -1px 1px 0 #000,1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000;
     text-align: center;
     height: 100%;
     background-image:url('static/8728.jpg');
     background-attachment: fixed;
     background-size: cover;
+  }
+  #results {
+    position:fixed;
+    width: 1100px;
+    height: 500px;
+    padding-left: 120px;
+    padding-bottom: -110px;
+    overflow-y: scroll;
   }
   .hide, form {
     display: none
@@ -83,142 +91,163 @@
   <title>Flask example</title>
 </head>
 <body>
-  <input form="form" type="radio" id="bmp" name="searchtype" value="bmp" onclick="changeInputs()">
-  <label for="bmp">Boolean/multi-word phrases</label>
-  <input form="form" type="radio" id="stem" name="searchtype" value="stem" onclick="changeInputs()">
-  <label for="stem">Stemming (not working properly)</label><br>
-  <section>
-    <div class="left">
-      <p></p>
-    </div>
-    <div class="middle">
-      <h1>Find articles with keywords</h1>
-      <!--Reload the page with variable "query" in the URL-->
-      <p id="noChoiceYet"><i>Choose a search type.</i></p>
-      <form id="form" action="/search" method="POST">
-        <p class="hide" id="stemerror" disabled><i>Stemming not currently available, see the wiki for specifics</i></p>
-        <label for="number">Number of words:</label>
-        <input type="number" id="number" name="number" min="1" step="1"><br><br>
-        <label for="words" id="wordlabel">Words:</label>
-        <input type="text" id="words" name="words"><br><br>
-        <div class="genres" id="genres">
-          <input type="checkbox" id="Fantasy" name="genre" value="Fantasy">
-          <label for="fantasy">Fantasy</label><br>
-          <input type="checkbox" id="Animation" name="genre" value="Animation">
-          <label for="Animation">Animation</label><br>
-          <input type="checkbox" id="Horror" name="genre" value="Horror">
-          <label for="Horror">Horror</label>
-        </div><br>
+  <input style="align:left" type="checkbox" name="togglemenu" onclick="toggleMenu()" checked>
+  <label for="togglemenu">Show search menu</label>
+  <div id="menu">
+    <input form="form" type="radio" id="mw" name="searchtype" value="mw" onclick="changeInputs()">
+    <label for="mw">Multi-word phrases</label>
+    <input form="form" type="radio" id="stem" name="searchtype" value="stem" onclick="changeInputs()">
+    <label for="stem">Stemming (not working properly)</label><br>
+    <section>
+      <div class="left">
+        <p></p>
+      </div>
+      <div class="middle">
+        <h1>Find movie subtitles<span data-toggle='tooltip' title='Search for movie subtitles by keyword(s). The movies are grouped into 3 genres (fantasy, animation, horror), and the results are sorted by relevancy.'><sup>?</sup></span></h1>
+        <!--Reload the page with variable "query" in the URL-->
+        <p id="noChoiceYet"><i>Choose a search type.</i></p>
+        <form id="form" action="/search" method="POST">
+          <p class="hide" id="stemerror" disabled><i>Stemming not currently available, see issue #17 for specifics.</i></p>
+          <label for="number">Number of words:</label>
+          <input type="number" id="number" name="number" min="1" step="1"><br><br>
+          <label for="words" id="wordlabel">Words:</label>
+          <input type="text" id="words" name="words"><br><br>
+          <div class="genres" id="genres">
+            <input type="checkbox" id="Fantasy" name="genre" value="Fantasy" onclick="changeBackground('fantasy')">
+            <label for="fantasy">Fantasy</label><br>
+            <input type="checkbox" id="Animation" name="genre" value="Animation" onclick="changeBackground('animation')">
+            <label for="Animation">Animation</label><br>
+            <input type="checkbox" id="Horror" name="genre" value="Horror" onclick="changeBackground('horror')">
+            <label for="Horror">Horror</label>
+          </div><br>
 
-        <div class="Fantasy hide">
-          <h3>Fantasy</h3>
-          {% for year in fantasy_years %}
-          <div class="years">
-          <input type="checkbox" name="fantasy_year" value={{year}} >
-          <label for={{year}}>{{ year }}</label><br>
+          <div class="Fantasy hide">
+            <h3>Fantasy</h3>
+            {% for year in fantasy_years %}
+            <div class="years">
+            <input type="checkbox" name="fantasy_year" value={{year}} >
+            <label for={{year}}>{{ year }}</label><br>
+            </div>
+            {% endfor %}
+            <br>
+            <input type="button" onclick='selects("fantasy_year")' value="Select All"/>
+            <input type="button" onclick='deSelect("fantasy_year")' value="Deselect All"/>
           </div>
-          {% endfor %}
-          <br>
-          <input type="button" onclick='selects("fantasy_year")' value="Select All"/>
-          <input type="button" onclick='deSelect("fantasy_year")' value="Deselect All"/>
-        </div>
-        <div class="Animation hide">
-          <h3>Animation</h3>
-          {% for year in animation_years %}
-          <div class="years">
-          <input type="checkbox" name="animation_year" value={{year}} >
-          <label for={{year}}>{{ year }}</label><br>
+          <div class="Animation hide">
+            <h3>Animation</h3>
+            {% for year in animation_years %}
+            <div class="years">
+            <input type="checkbox" name="animation_year" value={{year}} >
+            <label for={{year}}>{{ year }}</label><br>
+            </div>
+            {% endfor %}
+            <br>
+            <input type="button" onclick='selects("animation_year")' value="Select All"/>
+            <input type="button" onclick='deSelect("animation_year")' value="Deselect All"/>
           </div>
-          {% endfor %}
-          <br>
-          <input type="button" onclick='selects("animation_year")' value="Select All"/>
-          <input type="button" onclick='deSelect("animation_year")' value="Deselect All"/>
-        </div>
-        <div class="Horror hide">
-          <h3>Horror</h3>
-          {% for year in horror_years %}
-          <div class="years">
-          <input type="checkbox" name="horror_year" value={{year}} >
-          <label for={{year}}>{{ year }}</label><br>
+          <div class="Horror hide">
+            <h3>Horror</h3>
+            {% for year in horror_years %}
+            <div class="years">
+            <input type="checkbox" name="horror_year" value={{year}} >
+            <label for={{year}}>{{ year }}</label><br>
+            </div>
+            {% endfor %}
+            <br>
+            <input type="button" onclick='selects("horror_year")' value="Select All"/>
+            <input type="button" onclick='deSelect("horror_year")' value="Deselect All"/>
           </div>
-          {% endfor %}
-          <br>
-          <input type="button" onclick='selects("horror_year")' value="Select All"/>
-          <input type="button" onclick='deSelect("horror_year")' value="Deselect All"/>
-        </div>
-        <script type="text/javascript">
-          $(document).ready(function() {
-              $('input[type="checkbox"]').click(function() {
-                  var inputValue = $(this).attr("value");
-                  $("." + inputValue).toggle();
-              });
-          });
+          <script type="text/javascript">
+            $(document).ready(function() {
+                $('input[type="checkbox"]').click(function() {
+                    var inputValue = $(this).attr("value");
+                    $("." + inputValue).toggle();
+                });
+            });
+          </script>
+          <br><input type="submit" id="search" value="Search (Multi-word)" onclick="$('#loading').show();"><br>
+        </form>
+        <div id="loading" style="display:none;"><img src="\static\ajax-loader.gif" alt="" />
+        <br>Loading!</div>
+        <script>
+          function changeBackground(genre){
+            if (genre=='fantasy') {document.body.style.backgroundImage = "url('static/flying-dragon.jpg')"}
+            else if (genre=='animation') {document.body.style.backgroundImage = "url('static/clay-animation.jpg')"}
+            else if (genre=='horror') {document.body.style.backgroundImage = "url('static/frightening.jpg')"}
+          }
+          // All backgrounds from www.freepik.com
+          function toggleMenu(){
+            if (document.getElementById("menu").style.display!="none"){
+              document.getElementById("menu").style.display="none"
+            }
+            else {
+              document.getElementById("menu").style.display="block"
+            }
+          }
+          function changeInputs(){
+            document.getElementById("noChoiceYet").style.display="none";
+            document.getElementsByTagName("form")[0].style.display="block";
+            var search_type="mw";
+            document.getElementsByName("searchtype").forEach((stype) => {
+              if (stype.checked) {search_type=stype.value}
+            });
+            if(search_type=="stem"){
+              document.getElementById("number").setAttribute("disabled","");
+              document.getElementById("words").setAttribute("disabled","");
+              document.getElementById("search").setAttribute("disabled","");
+              document.getElementById("search").value="Search (stemming)";
+              document.getElementById("wordlabel").innerHTML="Word:";
+              document.getElementById("genres").style.display="none";
+              document.getElementById("stemerror").style.display="block"
+            }
+            else if(search_type=="mw"){
+              document.getElementById("number").removeAttribute("disabled");
+              document.getElementById("words").removeAttribute("disabled");
+              document.getElementById("search").removeAttribute("disabled");
+              document.getElementById("search").value="Search (Multi-word)";
+              document.getElementById("wordlabel").innerHTML="Word(s):";
+              document.getElementById("genres").removeAttribute("style","display");
+              document.getElementById("stemerror").style.display="none"
+            }
+          }
         </script>
-        <br><input type="submit" id="search" value="Search (Boolean/multi-word)" onclick="$('#loading').show();"><br>
-      </form>
-      <div id="loading" style="display:none;"><img src="\static\ajax-loader.gif" alt="" />
-      <br>Loading!</div>
-      <script>
-        function changeInputs(){
-          document.getElementById("noChoiceYet").style.display="none";
-          document.getElementsByTagName("form")[0].style.display="block";
-          var search_type="bmp";
-          document.getElementsByName("searchtype").forEach((stype) => {
-            if (stype.checked) {search_type=stype.value}
-          });
-          if(search_type=="stem"){
-            document.getElementById("number").setAttribute("disabled","");
-            document.getElementById("words").setAttribute("disabled","");
-            document.getElementById("search").setAttribute("disabled","");
-            document.getElementById("search").value="Search (stemming)";
-            document.getElementById("wordlabel").innerHTML="Word:";
-            document.getElementById("genres").style.display="none";
-            document.getElementById("stemerror").style.display="block"
-          }
-          else if(search_type=="bmp"){
-            document.getElementById("number").removeAttribute("disabled");
-            document.getElementById("words").removeAttribute("disabled");
-            document.getElementById("search").removeAttribute("disabled");
-            document.getElementById("search").value="Search (Boolean/multi-word)";
-            document.getElementById("wordlabel").innerHTML="Word(s):";
-            document.getElementById("genres").removeAttribute("style","display");
-            document.getElementById("stemerror").style.display="none"
-          }
-        }
-      </script>
-    </div>
-    <div class="right" style="font-size:130%">
-      <p>
-      <!--If there is one error in the list-->
-      {% if errors|length == 1 %}
-      <!--Show only that error-->
-      <p>{{errors[0]}}</p>
-      {% else %}
-      <!--Otherwise show each error and then go through each article
-          and show the name and a preview of it-->
-      {% for error in errors %}
-      <p>{{error}}</p>
-      <!--End for loop for errors-->
-      {% endfor %}
-      {% endif %}
-    </div>
-  </section>
+      </div>
+      <div class="right">
+        <p style="font-size:130%">
+          <!--If there is one error in the list-->
+          {% if errors|length == 1 %}
+          <!--Show only that error-->
+          <p>{{errors[0]}}</p>
+          {% else %}
+          <!--Otherwise show each error and then go through each article
+              and show the name and a preview of it-->
+          {% for error in errors %}
+          <p>{{error}}</p>
+          <!--End for loop for errors-->
+          {% endfor %}
+          {% endif %}
+        </p>
+      </div>
+    </section>
+  </div>
   <table>
-    {% if articles|length != 0 %}
-    <p><b>{{matches}}</b> matching articles found.</p>
-    {% for name in articles.items() %}
-    <ul>
-      <!--Display the name and a preview of the article-->
-      <h2>{{ name[0] }} ({{name[1]|length}} matches)</h2>
-      {% for item in name[1] %}
-      <li><em>{{ item[0] }}</em> (<b>{{ item[2] }}</b>)</li>
-      <li>{{ item[1] }}</li>
+    {% if matches != 0 %}
+    <p><b>{{matches}}</b> matching movies found.</p>
+    <div id="results">
+      {% for name in articles.items() %}
+      <ul>
+        <!--Display the name and a preview of the article-->
+        <h2>{{ name[0] }} ({{name[1]|length}} matches)</h2>
+        {% for item in name[1] %}
+        <li><em>{{ item[0] }}</em> (<b>{{ item[2] }}</b>)</li><br>
+        <!-- <li>{{ item[1] }}</li> -->
+        {% endfor %}
+      </ul>
+      <!--End for loop for article names (and previews)-->
       {% endfor %}
-    </ul>
-    <!--End for loop for article names and previews-->
-    {% endfor %}
+    </div>
     {% else %}
-    <p><b>No</b> matching articles found.</p>
+    <p><b>No</b> matching movies found.</p>
     {% endif %}
   </table>
 </body>
