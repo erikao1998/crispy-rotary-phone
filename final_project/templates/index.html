@@ -23,12 +23,20 @@
   body {
     font-family: Garamond, serif;
     color:white;
-	  text-shadow: -1px 1px 0 #000,1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000;
+    text-shadow: -1px 1px 0 #000,1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000;
     text-align: center;
     height: 100%;
     background-image:url('static/8728.jpg');
     background-attachment: fixed;
     background-size: cover;
+  }
+  #results {
+    position:fixed;
+    width: 1000px;
+    height: 500px;
+    padding-left: 180px;
+    padding-bottom: -110px;
+    overflow-y: scroll;
   }
   .hide, form {
     display: none
@@ -83,11 +91,11 @@
   <title>Flask example</title>
 </head>
 <body>
-  <input style="align:left" type="checkbox" name="togglemenu" onclick="toggleMenu()">
+  <input style="align:left" type="checkbox" name="togglemenu" onclick="toggleMenu()" checked>
   <label for="togglemenu">Show search menu</label>
   <div id="menu">
-    <input form="form" type="radio" id="bmp" name="searchtype" value="bmp" onclick="changeInputs()">
-    <label for="bmp">Boolean/multi-word phrases</label>
+    <input form="form" type="radio" id="mw" name="searchtype" value="mw" onclick="changeInputs()">
+    <label for="mw">Multi-word phrases</label>
     <input form="form" type="radio" id="stem" name="searchtype" value="stem" onclick="changeInputs()">
     <label for="stem">Stemming (not working properly)</label><br>
     <section>
@@ -95,11 +103,11 @@
         <p></p>
       </div>
       <div class="middle">
-        <h1>Find movie subtitles with keywords by genre</h1>
+        <h1>Find movie subtitles<span data-toggle='tooltip' title='Search for movie subtitles by keyword(s). The movies are grouped into 3 genres (fantasy, animation, horror), and the results are sorted by relevancy.'><sup>?</sup></span></h1>
         <!--Reload the page with variable "query" in the URL-->
         <p id="noChoiceYet"><i>Choose a search type.</i></p>
         <form id="form" action="/search" method="POST">
-          <p class="hide" id="stemerror" disabled><i>Stemming not currently available, see the wiki for specifics</i></p>
+          <p class="hide" id="stemerror" disabled><i>Stemming not currently available, see issue #17 for specifics.</i></p>
           <label for="number">Number of words:</label>
           <input type="number" id="number" name="number" min="1" step="1"><br><br>
           <label for="words" id="wordlabel">Words:</label>
@@ -157,7 +165,7 @@
                 });
             });
           </script>
-          <br><input type="submit" id="search" value="Search (Boolean/multi-word)" onclick="$('#loading').show();"><br>
+          <br><input type="submit" id="search" value="Search (Multi-word)" onclick="$('#loading').show();"><br>
         </form>
         <div id="loading" style="display:none;"><img src="\static\ajax-loader.gif" alt="" />
         <br>Loading!</div>
@@ -173,7 +181,7 @@
           function changeInputs(){
             document.getElementById("noChoiceYet").style.display="none";
             document.getElementsByTagName("form")[0].style.display="block";
-            var search_type="bmp";
+            var search_type="mw";
             document.getElementsByName("searchtype").forEach((stype) => {
               if (stype.checked) {search_type=stype.value}
             });
@@ -186,11 +194,11 @@
               document.getElementById("genres").style.display="none";
               document.getElementById("stemerror").style.display="block"
             }
-            else if(search_type=="bmp"){
+            else if(search_type=="mw"){
               document.getElementById("number").removeAttribute("disabled");
               document.getElementById("words").removeAttribute("disabled");
               document.getElementById("search").removeAttribute("disabled");
-              document.getElementById("search").value="Search (Boolean/multi-word)";
+              document.getElementById("search").value="Search (Multi-word)";
               document.getElementById("wordlabel").innerHTML="Word(s):";
               document.getElementById("genres").removeAttribute("style","display");
               document.getElementById("stemerror").style.display="none"
@@ -217,20 +225,20 @@
   </div>
   <table>
     {% if matches != 0 %}
-    <p><b>{{matches}}</b> matching articles found.</p>
+    <p><b>{{matches}}</b> matching movies found.</p>
     {% for name in articles.items() %}
-    <ul>
+    <ul id="results">
       <!--Display the name and a preview of the article-->
       <h2>{{ name[0] }} ({{name[1]|length}} matches)</h2>
       {% for item in name[1] %}
-      <li><em>{{ item[0] }}</em> (<b>{{ item[2] }}</b>)</li>
-      <li>{{ item[1] }}</li>
+      <li><em>{{ item[0] }}</em> (<b>{{ item[2] }}</b>)</li><br>
+      <!-- <li>{{ item[1] }}</li> -->
       {% endfor %}
     </ul>
     <!--End for loop for article names and previews-->
     {% endfor %}
     {% else %}
-    <p><b>No</b> matching articles found.</p>
+    <p><b>No</b> matching movies found.</p>
     {% endif %}
   </table>
 </body>

@@ -209,5 +209,5 @@ def search():
                 errors = ["Enter both a number and at least one word."]
 
     #Render index.html with matches variable
-    return render_template('index.html', searchtype=searchtype, articles=all_articles, errors=errors, \
+    return render_template('index.html', articles=all_articles, errors=errors, \
             fantasy_years=fantasy, animation_years=animation, horror_years=horror, matches=matches)
