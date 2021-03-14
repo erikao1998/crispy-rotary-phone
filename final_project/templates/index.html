@@ -32,9 +32,9 @@
   }
   #results {
     position:fixed;
-    width: 1000px;
+    width: 1100px;
     height: 500px;
-    padding-left: 180px;
+    padding-left: 120px;
     padding-bottom: -110px;
     overflow-y: scroll;
   }
@@ -113,11 +113,11 @@
           <label for="words" id="wordlabel">Words:</label>
           <input type="text" id="words" name="words"><br><br>
           <div class="genres" id="genres">
-            <input type="checkbox" id="Fantasy" name="genre" value="Fantasy">
+            <input type="checkbox" id="Fantasy" name="genre" value="Fantasy" onclick="changeBackground('fantasy')">
             <label for="fantasy">Fantasy</label><br>
-            <input type="checkbox" id="Animation" name="genre" value="Animation">
+            <input type="checkbox" id="Animation" name="genre" value="Animation" onclick="changeBackground('animation')">
             <label for="Animation">Animation</label><br>
-            <input type="checkbox" id="Horror" name="genre" value="Horror">
+            <input type="checkbox" id="Horror" name="genre" value="Horror" onclick="changeBackground('horror')">
             <label for="Horror">Horror</label>
           </div><br>
 
@@ -170,6 +170,12 @@
         <div id="loading" style="display:none;"><img src="\static\ajax-loader.gif" alt="" />
         <br>Loading!</div>
         <script>
+          function changeBackground(genre){
+            if (genre=='fantasy') {document.body.style.backgroundImage = "url('static/flying-dragon.jpg')"}
+            else if (genre=='animation') {document.body.style.backgroundImage = "url('static/clay-animation.jpg')"}
+            else if (genre=='horror') {document.body.style.backgroundImage = "url('static/frightening.jpg')"}
+          }
+          // All backgrounds from www.freepik.com
           function toggleMenu(){
             if (document.getElementById("menu").style.display!="none"){
               document.getElementById("menu").style.display="none"
@@ -206,20 +212,21 @@
           }
         </script>
       </div>
-      <div class="right" style="font-size:130%">
-        <p>
-        <!--If there is one error in the list-->
-        {% if errors|length == 1 %}
-        <!--Show only that error-->
-        <p>{{errors[0]}}</p>
-        {% else %}
-        <!--Otherwise show each error and then go through each article
-            and show the name and a preview of it-->
-        {% for error in errors %}
-        <p>{{error}}</p>
-        <!--End for loop for errors-->
-        {% endfor %}
-        {% endif %}
+      <div class="right">
+        <p style="font-size:130%">
+          <!--If there is one error in the list-->
+          {% if errors|length == 1 %}
+          <!--Show only that error-->
+          <p>{{errors[0]}}</p>
+          {% else %}
+          <!--Otherwise show each error and then go through each article
+              and show the name and a preview of it-->
+          {% for error in errors %}
+          <p>{{error}}</p>
+          <!--End for loop for errors-->
+          {% endfor %}
+          {% endif %}
+        </p>
       </div>
     </section>
   </div>
