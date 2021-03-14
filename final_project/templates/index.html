@@ -226,17 +226,19 @@
   <table>
     {% if matches != 0 %}
     <p><b>{{matches}}</b> matching movies found.</p>
-    {% for name in articles.items() %}
-    <ul id="results">
-      <!--Display the name and a preview of the article-->
-      <h2>{{ name[0] }} ({{name[1]|length}} matches)</h2>
-      {% for item in name[1] %}
-      <li><em>{{ item[0] }}</em> (<b>{{ item[2] }}</b>)</li><br>
-      <!-- <li>{{ item[1] }}</li> -->
+    <div id="results">
+      {% for name in articles.items() %}
+      <ul>
+        <!--Display the name and a preview of the article-->
+        <h2>{{ name[0] }} ({{name[1]|length}} matches)</h2>
+        {% for item in name[1] %}
+        <li><em>{{ item[0] }}</em> (<b>{{ item[2] }}</b>)</li><br>
+        <!-- <li>{{ item[1] }}</li> -->
+        {% endfor %}
+      </ul>
+      <!--End for loop for article names (and previews)-->
       {% endfor %}
-    </ul>
-    <!--End for loop for article names and previews-->
-    {% endfor %}
+    </div>
     {% else %}
     <p><b>No</b> matching movies found.</p>
     {% endif %}

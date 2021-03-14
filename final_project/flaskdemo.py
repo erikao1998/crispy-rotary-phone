@@ -113,9 +113,9 @@ def search_article(query_string, number, doc, names, stemmed, years):
          match_years.append(years[doc_idx])
 
     match_names, subtitles, match_years = manipulate(match_names, subtitles, match_years)
-
+    nc = ['and','of','the','a','an','on','in','de','dei','des','to']
     for i in range(len(match_names)):
-        matches_and_previews.append([match_names[i], subtitles[i], match_years[i]])
+        matches_and_previews.append([" ".join([w.upper() if w in ['ii','iii'] else w.capitalize() if w not in nc or w==match_names[i].split()[0] else w for w in match_names[i].split()]), subtitles[i], match_years[i]])
 
     return matches_and_previews
 
